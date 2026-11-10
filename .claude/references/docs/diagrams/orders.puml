@@ -1,0 +1,65 @@
+@startuml orders
+' Diagrama de clases de un contexto: solo modelo de dominio, sin repositorios ni casos de uso.
+title Contexto: orders
+
+hide empty members
+skinparam classAttributeIconSize 0
+
+class Order <<Aggregate Root>> {
+  id : OrderId
+  customerId : CustomerId
+  currency : Currency
+  placedAt : Instant
+  status : OrderStatus
+  version : long
+  --
+  addLine(productId, unitPrice, quantity)
+  applyDiscount(discount)
+  confirm()
+  markPaid()
+  subtotal() : Money
+  total() : Money
+}
+
+class OrderLine <<Value Object>> {
+  productId : ProductId
+  unitPrice : Money
+  quantity : int
+  --
+  subtotal() : Money
+}
+
+interface Discount <<Value Object>> {
+  applyTo(amount) : Money
+}
+class NoDiscount <<Value Object>>
+class PercentageDiscount <<Value Object>> {
+  percent : int
+}
+class FixedDiscount <<Value Object>> {
+  value : Money
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+}
+
+class Money <<Value Object>> {
+  amount : BigDecimal
+  currency : Currency
+}
+
+class Customer <<Aggregate Root>> #EEEEEE
+note right of Customer : Contexto customers
+
+Order *-- "0..*" OrderLine : lines
+Order *-- "1" Discount : discount
+Order --> OrderStatus
+Discount <|.. NoDiscount
+Discount <|.. PercentageDiscount
+Discount <|.. FixedDiscount
+OrderLine --> Money
+Order ..> Customer : customerId
+@enduml

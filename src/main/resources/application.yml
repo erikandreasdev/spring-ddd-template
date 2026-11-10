@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: CAMBIAME
+  datasource:
+    # CAMBIAME: base de datos. En los tests y con `mvn spring-boot:test-run` la conexión la
+    # aporta Testcontainers; estos valores solo se usan al arrancar contra una base de datos real.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/CAMBIAME}
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
+  jackson:
+    default-property-inclusion: non_null
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    # Construye los records *Row por nombre de columna, no por posición.
+    arg-name-based-constructor-auto-mapping: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  # Las trazas solo se envían si se define el destino OTLP por variable de entorno:
+  # MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT=http://<collector>:4318/v1/traces
+
+# Logs en JSON fuera de local, por variable de entorno: LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs

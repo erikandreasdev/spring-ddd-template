@@ -1,0 +1,10 @@
+package com.CAMBIAME.orders.domain;
+
+import com.CAMBIAME.shared.domain.DomainException;
+
+public final class OrderNotConfirmedException extends DomainException {
+
+  public OrderNotConfirmedException(final OrderId id) {
+    super("Order " + id.value() + " is not confirmed");
+  }
+}
