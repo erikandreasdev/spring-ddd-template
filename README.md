@@ -18,8 +18,8 @@ marker:
 grep -rn "CHANGEME:" --exclude=README.md .
 ```
 
-There are eight spots, all but one about the database. The template works with PostgreSQL
-without changes; if that is your database, just delete the comments.
+There are twelve spots, all but two about the database (the format command). The template works
+with PostgreSQL without changes; if that is your database, just delete the comments.
 
 | File | What to decide |
 |---|---|
@@ -29,6 +29,9 @@ without changes; if that is your database, just delete the comments.
 | `CLAUDE.md` (two comments) | Database name and format command |
 | `.claude/rules/persistence.md` | Sequence syntax |
 | `.claude/references/infrastructure.md` | SQL syntax of the references |
+| `.github/copilot-instructions.md` (two comments) | Same two decisions for GitHub Copilot |
+| `.github/instructions/persistence.instructions.md` | Sequence syntax |
+| `.github/references/infrastructure.md` | SQL syntax of the references |
 
 Delete each `CHANGEME:` comment once resolved, so the next step does not alter it.
 
@@ -67,6 +70,11 @@ CLAUDE.md
 
 `docs/` is part of the project.
 
+The GitHub Copilot configuration (`.github/`) is the opposite: the cloud agent reads it from the
+repository, so commit it. If you only use Claude Code, delete `.github/copilot-instructions.md`,
+`.github/instructions/`, `.github/skills/`, `.github/references/` and
+`.github/workflows/copilot-setup-steps.yml`.
+
 ### 4. First run
 
 You need Java 21, Maven and Docker running.
@@ -101,6 +109,23 @@ project folder. It starts in plan mode: it edits nothing until you approve the p
 
 Configured permissions: `mvn` and read-only `git` commands without asking; asks before editing
 `CLAUDE.md`, `.claude/`, `ArchitectureTest` and `pom.xml`.
+
+### GitHub Copilot
+
+The same configuration for Copilot (cloud agent, agent mode and code review). It is a copy of the
+Claude Code one with the paths changed; keep both in sync when you edit either.
+
+| File | Purpose |
+|---|---|
+| `.github/copilot-instructions.md` | Architecture and way of working (counterpart of `CLAUDE.md`); applies to every request |
+| `.github/instructions/*.instructions.md` | One per rule in `.claude/rules/`; the `applyTo` frontmatter selects the files it applies to |
+| `.github/skills/add-feature/` | Procedure for adding a feature |
+| `.github/references/` | Same Markdown references as `.claude/references/` |
+| `.github/workflows/copilot-setup-steps.yml` | Java 21, Maven and dependencies for the cloud agent |
+
+Adapted rules: the cloud agent posts its plan in the pull request and commits only to its own
+branch (never to `main`, never merges). Copilot also reads `CLAUDE.md` and `AGENTS.md` if present,
+so it may load overlapping instructions; delete the ones you do not use.
 
 ### Code
 
