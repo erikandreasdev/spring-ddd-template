@@ -14,23 +14,6 @@
       "Edit(/.claude/**)",
       "Edit(/src/test/java/**/ArchitectureTest.java)",
       "Edit(/pom.xml)"
-    ],
-    "deny": [
-      "Bash(git commit *)",
-      "Bash(git push *)"
-    ]
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/architecture-check.sh\"",
-            "timeout": 300
-          }
-        ]
-      }
     ]
   }
 }

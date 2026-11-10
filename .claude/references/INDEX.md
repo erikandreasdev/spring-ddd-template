@@ -15,7 +15,7 @@ Before creating a class, open the file for its layer and copy the shape of the s
 | Application | `application.md` |
 | Infrastructure (web, persistence, external adapters, API, migrations) | `infrastructure.md` |
 | Tests | `tests.md` |
-| Diagrams and ADRs | `docs.md` |
+| Diagrams | `docs.md` |
 
 ## Sections by kind
 
@@ -70,4 +70,3 @@ Before creating a class, open the file for its layer and copy the shape of the s
 | Shared WireMock server | `tests.md` |
 | Context diagram | `docs.md` |
 | Context map | `docs.md` |
-| ADR | `docs.md` |

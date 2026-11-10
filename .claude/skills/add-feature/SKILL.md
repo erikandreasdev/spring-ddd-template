@@ -14,9 +14,6 @@ Before writing anything, present a plan with:
 - Changes to the domain model and the database schema. Destructive migrations, flagged
   separately.
 - New dependencies, with the reason.
-- If any part departs from the rules or chooses between alternatives: propose the ADR.
-
-Review the ADRs in `docs/adr/` first so you do not contradict decisions already made.
 
 ## 2. Implementation
 
@@ -33,7 +30,7 @@ and follow the shape of its kind.
    the generated interface.
 6. Flow: add or extend the `<Aggregate>FlowTest` if the main flow changes.
 7. Documentation: update `docs/diagrams/<context>.puml` if the model changed (and the context
-   map if there are several). Write the ADR if it was approved in the plan.
+   map if there are several).
 8. Format the code and run `mvn verify`.
 
 ## 3. Wrap-up
@@ -46,5 +43,4 @@ and follow the shape of its kind.
 `.claude/references/` has a complete example context (`orders`) as one Markdown file per layer
 (`domain.md`, `application.md`, `infrastructure.md`, `tests.md`, `docs.md`), indexed in
 `INDEX.md`: aggregate, value objects, commands, queries, results, use cases, ports, controller,
-web conversion, mappers, repository, migration, HTTP adapter, tests at every level, diagrams
-and ADR.
+web conversion, mappers, repository, migration, HTTP adapter, tests at every level, diagrams.

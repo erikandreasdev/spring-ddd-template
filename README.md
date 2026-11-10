@@ -94,15 +94,13 @@ project folder. It starts in plan mode: it edits nothing until you approve the p
 | `.claude/rules/api.md` | API design and controllers; when reading `api.yaml` or the web layer |
 | `.claude/rules/persistence.md` | Repositories, SQL and migrations; when reading persistence or `db/` |
 | `.claude/rules/testing.md` | Test strategy and style; when reading `src/test` |
-| `.claude/rules/docs.md` | Diagrams and ADRs; when reading `docs/` |
+| `.claude/rules/docs.md` | Diagrams; when reading `docs/` |
 | `.claude/skills/add-feature/` | Procedure for adding a feature |
 | `.claude/references/` | One example of each kind of class (`orders` context) as a Markdown file per layer, indexed in `INDEX.md`. Not compiled |
-| `.claude/settings.local.json` | Plan mode by default, permissions and the hook |
-| `.claude/hooks/architecture-check.sh` | Runs `ArchitectureTest` at the end of every turn |
+| `.claude/settings.local.json` | Plan mode by default and permissions |
 
-Configured permissions: `mvn` and read-only `git` commands without asking; `git commit` and
-`git push` blocked; asks before editing `CLAUDE.md`, `.claude/`, `ArchitectureTest` and
-`pom.xml`.
+Configured permissions: `mvn` and read-only `git` commands without asking; asks before editing
+`CLAUDE.md`, `.claude/`, `ArchitectureTest` and `pom.xml`.
 
 ### Code
 
@@ -120,7 +118,6 @@ Configured permissions: `mvn` and read-only `git` commands without asking; `git 
 | `IntegrationTest.java`, `TestcontainersConfig.java` | Integration tests against a real database |
 | `TestApplication.java` | Local run with Testcontainers |
 | `ApplicationTest.java` | Checks that the context starts |
-| `docs/adr/` | Template and ADRs |
 | `docs/diagrams/` | PlantUML diagrams per context (empty at first) |
 
 ## Per-environment configuration

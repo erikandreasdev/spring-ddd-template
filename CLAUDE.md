@@ -90,7 +90,7 @@ Dependencies only point inwards: `infrastructure → application → domain`.
 | API (`api.yaml`) and controllers | `.claude/rules/api.md` |
 | Persistence and migrations | `.claude/rules/persistence.md` |
 | Tests | `.claude/rules/testing.md` |
-| Diagrams and ADRs | `.claude/rules/docs.md` |
+| Diagrams | `.claude/rules/docs.md` |
 | Adding or changing a feature | `add-feature` skill (procedure) |
 | Example of each kind of class | `.claude/references/INDEX.md` (one file per layer) |
 
@@ -101,7 +101,7 @@ class of a kind that does not exist in the project yet, open its reference.
 ## Way of working
 
 - Always a plan before touching code, and wait for my approval. The plan states which files
-  change, whether the API, the model or the schema change, and whether an ADR is needed.
+  change and whether the API, the model or the schema change.
 - Never commit or `push`: changes stay uncommitted so I can review them.
 - Never, unless I ask: modify `ArchitectureTest`, `CLAUDE.md` or `.claude/`, edit generated
   code, disable or delete tests.
@@ -109,15 +109,13 @@ class of a kind that does not exist in the project yet, open its reference.
 - Destructive migrations (dropping columns or tables, changing types): always explicit in the
   plan, even if the change looks small.
 - If the domain model changes, update its diagram in the same task.
-- If I accept an exception to these rules or we choose between real alternatives, record it in
-  an ADR in `docs/adr/`. Before proposing anything, review the existing ADRs.
 - When done: what changed, the result of `mvn verify` and any deviation from the rules.
 
 ## Verification
 
 - Work with TDD: test first, then code (details in `.claude/rules/testing.md`).
 - `ArchitectureTest` (ArchUnit) enforces dependencies and naming. It is not modified or
-  disabled to make code pass; the code is fixed. A hook runs it at the end of every turn: if it
-  fails, fix it before considering the work done.
+  disabled to make code pass; the code is fixed. Run it with `mvn -q test -Dtest=ArchitectureTest`
+  (no Docker needed); it also runs in `mvn verify`.
 - A feature is done when `mvn verify` passes (tests and 80% branch coverage). It needs Docker
   running.

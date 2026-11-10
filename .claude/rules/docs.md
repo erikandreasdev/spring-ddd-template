@@ -18,13 +18,3 @@ Written in English. Class, table and endpoint names are kept as they are.
   and one arrow per relationship, showing the direction of the dependency and what is
   exchanged.
 - They are updated in the same task that changes the model.
-
-## ADRs (Michael Nygard format)
-- One per decision: `docs/adr/NNNN-lowercase-title-with-hyphens.md`, numbered in order.
-- Created when an exception to the project rules is accepted, when choosing between real
-  alternatives (a library, a way to integrate a service) or when a rule changes. Not for every
-  task.
-- Fixed structure: title, status, context, decision and consequences. Template in
-  `docs/adr/template.md`.
-- An accepted ADR is never rewritten: if the decision changes, create a new one and mark the
-  old one as `Superseded by NNNN`.
