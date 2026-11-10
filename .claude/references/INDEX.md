@@ -1,92 +1,92 @@
-# Referencias de código
+# Code references
 
-Un contexto de ejemplo completo (`orders`) con un fichero por cada tipo de clase del proyecto.
-Antes de crear una clase, abre la referencia de su tipo y copia su forma: nombres, visibilidad,
-validación, `final`, estructura y comentarios de test.
+A complete example context (`orders`) with one file for each kind of class in the project.
+Before creating a class, open the reference for its kind and copy its shape: names,
+visibility, validation, `final`, structure and test comments.
 
-- Es un ejemplo: el dominio de pedidos es ficticio. Copia la forma, no el negocio.
-- Los comentarios `//` explican el patrón para ti; no se copian al código del proyecto, que solo
-  lleva comentarios del porqué.
-- Estos ficheros no se compilan ni se ejecutan. La fuente de verdad siguen siendo las reglas de
-  `CLAUDE.local.md` y `.claude/rules/`; si algo choca, mandan las reglas.
-- El SQL está en PostgreSQL. <!-- CAMBIAME: base de datos. Adapta secuencias, tipos y LIMIT/OFFSET a tu motor -->
-- Algunas piezas necesitan una dependencia que la plantilla no trae: `spring-boot-starter-restclient`
-  para `HttpPaymentGateway` y `org.wiremock:wiremock-standalone` (test) para `WireMockConfig`.
-  Inclúyelas en el plan cuando aparezca el primer servicio externo.
+- It is an example: the orders domain is fictional. Copy the shape, not the business.
+- The `//` comments explain the pattern for you; they are not copied into project code, which
+  only carries comments about the why.
+- These files are not compiled or run. The source of truth is still the rules in `CLAUDE.md`
+  and `.claude/rules/`; if anything conflicts, the rules win.
+- The SQL is PostgreSQL. <!-- CHANGEME: database. Adapt sequences, types and LIMIT/OFFSET to your engine -->
+- Some pieces need a dependency the template does not include: `spring-boot-starter-restclient`
+  for `HttpPaymentGateway` and `org.wiremock:wiremock-standalone` (test) for `WireMockConfig`.
+  Include them in the plan when the first external service appears.
 
-Rutas relativas a `.claude/references/`.
+Paths relative to `.claude/references/`.
 
-## Dominio
+## Domain
 
-| Tipo | Referencia |
+| Kind | Reference |
 |---|---|
-| Raíz de agregado | `main/java/com/CAMBIAME/orders/domain/Order.java` |
-| Estado del agregado para persistencia (más de 4 datos) | `main/java/com/CAMBIAME/orders/domain/OrderSnapshot.java` |
-| Identificador tipado | `main/java/com/CAMBIAME/orders/domain/OrderId.java` |
-| ID de un agregado de otro contexto | `main/java/com/CAMBIAME/orders/domain/CustomerId.java` |
-| Elemento de colección (value object sin ID) | `main/java/com/CAMBIAME/orders/domain/OrderLine.java` |
-| Value object compartido | `main/java/com/CAMBIAME/shared/domain/Money.java` |
-| Variantes con interfaz sellada | `main/java/com/CAMBIAME/orders/domain/Discount.java` |
-| Enum persistido | `main/java/com/CAMBIAME/orders/domain/OrderStatus.java` |
-| Excepción de regla de negocio (409) | `main/java/com/CAMBIAME/orders/domain/OrderNotEditableException.java` |
-| Excepción "no existe" (404) | `main/java/com/CAMBIAME/orders/domain/OrderNotFoundException.java` |
-| Interfaz de repositorio | `main/java/com/CAMBIAME/orders/domain/OrderRepository.java` |
+| Aggregate root | `main/java/com/CHANGEME/orders/domain/Order.java` |
+| Aggregate state for persistence (more than 4 values) | `main/java/com/CHANGEME/orders/domain/OrderSnapshot.java` |
+| Typed identifier | `main/java/com/CHANGEME/orders/domain/OrderId.java` |
+| ID of an aggregate from another context | `main/java/com/CHANGEME/orders/domain/CustomerId.java` |
+| Collection element (value object without ID) | `main/java/com/CHANGEME/orders/domain/OrderLine.java` |
+| Shared value object | `main/java/com/CHANGEME/shared/domain/Money.java` |
+| Variants with a sealed interface | `main/java/com/CHANGEME/orders/domain/Discount.java` |
+| Persisted enum | `main/java/com/CHANGEME/orders/domain/OrderStatus.java` |
+| Business rule exception (409) | `main/java/com/CHANGEME/orders/domain/OrderNotEditableException.java` |
+| "Not found" exception (404) | `main/java/com/CHANGEME/orders/domain/OrderNotFoundException.java` |
+| Repository interface | `main/java/com/CHANGEME/orders/domain/OrderRepository.java` |
 
-## Aplicación
+## Application
 
-| Tipo | Referencia |
+| Kind | Reference |
 |---|---|
-| Comando | `main/java/com/CAMBIAME/orders/application/PlaceOrderCommand.java` |
-| Caso de uso de creación (ID de secuencia, `Clock`) | `main/java/com/CAMBIAME/orders/application/PlaceOrderService.java` |
-| Caso de uso de modificación | `main/java/com/CAMBIAME/orders/application/AddOrderLineService.java` |
-| Caso de uso con servicio externo (orden y rollback) | `main/java/com/CAMBIAME/orders/application/PayOrderService.java` |
-| Consulta | `main/java/com/CAMBIAME/orders/application/GetOrderQuery.java` |
-| Caso de uso de lectura por ID | `main/java/com/CAMBIAME/orders/application/GetOrderService.java` |
-| Record de resultado | `main/java/com/CAMBIAME/orders/application/OrderSummary.java` |
-| Consulta paginada | `main/java/com/CAMBIAME/orders/application/ListCustomerOrdersQuery.java` |
-| Caso de uso de listado | `main/java/com/CAMBIAME/orders/application/ListCustomerOrdersService.java` |
-| Puerto de lectura | `main/java/com/CAMBIAME/orders/application/OrderSummaries.java` |
-| Resultado paginado | `main/java/com/CAMBIAME/shared/application/PageResult.java` |
-| Puerto de salida a un servicio externo | `main/java/com/CAMBIAME/orders/application/PaymentGateway.java` |
-| Excepción del contrato de un puerto | `main/java/com/CAMBIAME/orders/application/PaymentDeclinedException.java` |
+| Command | `main/java/com/CHANGEME/orders/application/PlaceOrderCommand.java` |
+| Creation use case (sequence ID, `Clock`) | `main/java/com/CHANGEME/orders/application/PlaceOrderService.java` |
+| Modification use case | `main/java/com/CHANGEME/orders/application/AddOrderLineService.java` |
+| Use case with an external service (ordering and rollback) | `main/java/com/CHANGEME/orders/application/PayOrderService.java` |
+| Query | `main/java/com/CHANGEME/orders/application/GetOrderQuery.java` |
+| Read-by-ID use case | `main/java/com/CHANGEME/orders/application/GetOrderService.java` |
+| Result record | `main/java/com/CHANGEME/orders/application/OrderSummary.java` |
+| Paginated query | `main/java/com/CHANGEME/orders/application/ListCustomerOrdersQuery.java` |
+| Listing use case | `main/java/com/CHANGEME/orders/application/ListCustomerOrdersService.java` |
+| Read port | `main/java/com/CHANGEME/orders/application/OrderSummaries.java` |
+| Paginated result | `main/java/com/CHANGEME/shared/application/PageResult.java` |
+| Output port to an external service | `main/java/com/CHANGEME/orders/application/PaymentGateway.java` |
+| Exception in a port's contract | `main/java/com/CHANGEME/orders/application/PaymentDeclinedException.java` |
 
-## Infraestructura
+## Infrastructure
 
-| Tipo | Referencia |
+| Kind | Reference |
 |---|---|
-| Especificación de la API | `main/resources/openapi/api.yaml` |
-| Controlador | `main/java/com/CAMBIAME/orders/infrastructure/web/OrderController.java` |
-| Conversión web | `main/java/com/CAMBIAME/orders/infrastructure/web/OrderApiConversion.java` |
-| Migración de Flyway | `main/resources/db/migration/V1__create_orders.sql` |
-| Mapper de agregado | `main/java/com/CAMBIAME/orders/infrastructure/persistence/OrderMapper.java` |
-| Filas (`*Row`) | `main/java/com/CAMBIAME/orders/infrastructure/persistence/OrderRow.java`, `OrderLineRow.java` |
-| Repositorio (versión, colecciones, sellados) | `main/java/com/CAMBIAME/orders/infrastructure/persistence/MyBatisOrderRepository.java` |
-| Mapper de lectura | `main/java/com/CAMBIAME/orders/infrastructure/persistence/OrderSummaryMapper.java` |
-| Implementación de puerto de lectura | `main/java/com/CAMBIAME/orders/infrastructure/persistence/MyBatisOrderSummaries.java` |
-| Propiedades de un adaptador | `main/java/com/CAMBIAME/orders/infrastructure/payment/PaymentProperties.java`, `PaymentConfig.java` |
-| Adaptador HTTP con `RestClient` | `main/java/com/CAMBIAME/orders/infrastructure/payment/HttpPaymentGateway.java` |
-| Cuerpo de petición externa | `main/java/com/CAMBIAME/orders/infrastructure/payment/ChargeRequest.java` |
-| Excepción técnica de integración | `main/java/com/CAMBIAME/orders/infrastructure/payment/PaymentUnavailableException.java` |
+| API specification | `main/resources/openapi/api.yaml` |
+| Controller | `main/java/com/CHANGEME/orders/infrastructure/web/OrderController.java` |
+| Web conversion | `main/java/com/CHANGEME/orders/infrastructure/web/OrderApiConversion.java` |
+| Flyway migration | `main/resources/db/migration/V1__create_orders.sql` |
+| Aggregate mapper | `main/java/com/CHANGEME/orders/infrastructure/persistence/OrderMapper.java` |
+| Rows (`*Row`) | `main/java/com/CHANGEME/orders/infrastructure/persistence/OrderRow.java`, `OrderLineRow.java` |
+| Repository (version, collections, sealed types) | `main/java/com/CHANGEME/orders/infrastructure/persistence/MyBatisOrderRepository.java` |
+| Read mapper | `main/java/com/CHANGEME/orders/infrastructure/persistence/OrderSummaryMapper.java` |
+| Read port implementation | `main/java/com/CHANGEME/orders/infrastructure/persistence/MyBatisOrderSummaries.java` |
+| Adapter properties | `main/java/com/CHANGEME/orders/infrastructure/payment/PaymentProperties.java`, `PaymentConfig.java` |
+| HTTP adapter with `RestClient` | `main/java/com/CHANGEME/orders/infrastructure/payment/HttpPaymentGateway.java` |
+| External request body | `main/java/com/CHANGEME/orders/infrastructure/payment/ChargeRequest.java` |
+| Technical integration exception | `main/java/com/CHANGEME/orders/infrastructure/payment/PaymentUnavailableException.java` |
 
 ## Tests
 
-| Tipo | Referencia |
+| Kind | Reference |
 |---|---|
-| Object Mother | `test/java/com/CAMBIAME/orders/domain/OrderMother.java` |
-| Test de agregado (incluye parametrizado) | `test/java/com/CAMBIAME/orders/domain/OrderTest.java` |
-| Test de value object | `test/java/com/CAMBIAME/shared/domain/MoneyTest.java` |
-| Test de caso de uso | `test/java/com/CAMBIAME/orders/application/ConfirmOrderServiceTest.java` |
-| Test de caso de uso con servicio externo (WireMock) | `test/java/com/CAMBIAME/orders/application/PayOrderServiceTest.java` |
-| Test de puerto de lectura | `test/java/com/CAMBIAME/orders/application/ListCustomerOrdersServiceTest.java` |
-| Test de concurrencia del repositorio | `test/java/com/CAMBIAME/orders/infrastructure/persistence/MyBatisOrderRepositoryTest.java` |
-| Test de controlador | `test/java/com/CAMBIAME/orders/infrastructure/web/OrderControllerTest.java` |
-| Test de flujo completo | `test/java/com/CAMBIAME/orders/OrderFlowTest.java` |
-| Servidor WireMock compartido | `test/java/com/CAMBIAME/WireMockConfig.java` |
+| Object Mother | `test/java/com/CHANGEME/orders/domain/OrderMother.java` |
+| Aggregate test (includes a parameterized one) | `test/java/com/CHANGEME/orders/domain/OrderTest.java` |
+| Value object test | `test/java/com/CHANGEME/shared/domain/MoneyTest.java` |
+| Use case test | `test/java/com/CHANGEME/orders/application/ConfirmOrderServiceTest.java` |
+| Use case test with an external service (WireMock) | `test/java/com/CHANGEME/orders/application/PayOrderServiceTest.java` |
+| Read port test | `test/java/com/CHANGEME/orders/application/ListCustomerOrdersServiceTest.java` |
+| Repository concurrency test | `test/java/com/CHANGEME/orders/infrastructure/persistence/MyBatisOrderRepositoryTest.java` |
+| Controller test | `test/java/com/CHANGEME/orders/infrastructure/web/OrderControllerTest.java` |
+| Full flow test | `test/java/com/CHANGEME/orders/OrderFlowTest.java` |
+| Shared WireMock server | `test/java/com/CHANGEME/WireMockConfig.java` |
 
-## Documentación
+## Documentation
 
-| Tipo | Referencia |
+| Kind | Reference |
 |---|---|
-| Diagrama de un contexto | `docs/diagrams/orders.puml` |
-| Mapa de contextos | `docs/diagrams/context-map.puml` |
-| ADR | `docs/adr/0002-guardar-el-total-calculado-en-orders.md` |
+| Context diagram | `docs/diagrams/orders.puml` |
+| Context map | `docs/diagrams/context-map.puml` |
+| ADR | `docs/adr/0002-store-computed-total-in-orders.md` |

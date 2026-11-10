@@ -10,7 +10,7 @@
       "Bash(git show *)"
     ],
     "ask": [
-      "Edit(/CLAUDE.local.md)",
+      "Edit(/CLAUDE.md)",
       "Edit(/.claude/**)",
       "Edit(/src/test/java/**/ArchitectureTest.java)",
       "Edit(/pom.xml)"

@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
-  title: CAMBIAME API
+  title: CHANGEME API
   version: 1.0.0
 servers:
   - url: /v1
 
-# Añade aquí los endpoints. Una etiqueta (tags) por agregado: genera una interfaz <Etiqueta>Api.
+# Add the endpoints here. One tag (tags) per aggregate: it generates a <Tag>Api interface.
 paths: {}
 
 components:

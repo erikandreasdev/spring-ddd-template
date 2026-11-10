@@ -6,42 +6,42 @@ paths:
 
 # API (contract-first)
 
-## La especificación manda
-- Todo cambio de la API empieza en `src/main/resources/openapi/api.yaml`. Después se regenera
-  (`mvn generate-sources`) y se implementa.
-- El código generado (`shared.infrastructure.web.api`, en `target/generated-sources`) nunca se
-  edita a mano.
-- OpenAPI 3.0. Una etiqueta (`tags`) por agregado, que genera la interfaz `<Etiqueta>Api`
+## The specification rules
+- Every API change starts in `src/main/resources/openapi/api.yaml`. Then regenerate
+  (`mvn generate-sources`) and implement.
+- Generated code (`shared.infrastructure.web.api`, in `target/generated-sources`) is never
+  edited by hand.
+- OpenAPI 3.0. One tag (`tags`) per aggregate, which generates the `<Tag>Api` interface
   (`orders` → `OrdersApi`).
-- Los esquemas se nombran sin sufijo (`PlaceOrder`, `Order`); el generador añade `Body`
-  (`PlaceOrderBody`) para que nunca choquen con clases del dominio.
-- `operationId` en `camelCase` con verbo y sustantivo: `placeOrder`, `confirmOrder`.
-- La validación de formato va en la especificación (`required`, `minimum`, `maxLength`,
-  `pattern`...) y se convierte en Bean Validation en el código generado.
+- Schemas are named without a suffix (`PlaceOrder`, `Order`); the generator adds `Body`
+  (`PlaceOrderBody`) so they never clash with domain classes.
+- `operationId` in `camelCase` with verb and noun: `placeOrder`, `confirmOrder`.
+- Format validation goes in the specification (`required`, `minimum`, `maxLength`,
+  `pattern`...) and becomes Bean Validation in the generated code.
 
-## Diseño
-- Versión en la URL: `servers: [{url: /v1}]`. Solo se crea `/v2` ante un cambio incompatible.
-- Recursos en plural y acciones como subrecurso con sustantivo:
+## Design
+- Version in the URL: `servers: [{url: /v1}]`. Only create `/v2` for an incompatible change.
+- Plural resources and actions as a noun sub-resource:
   `POST /orders/{id}/confirmation`.
-- Códigos: 201 con cabecera `Location` al crear, 204 en comandos sin cuerpo, 200 en
-  consultas; 400 validación, 404 no existe, 409 regla de negocio o conflicto de versión.
-  Los errores reutilizan `components/responses` (`BadRequest`, `NotFound`, `Conflict`).
-- Identificadores como `integer` `int64` con `minimum: 1`.
-- Dinero con el esquema `Money` (importe como cadena decimal y divisa ISO 4217).
-- Fechas como `string` `date-time` en UTC.
-- Enums por nombre en mayúsculas.
-- Listados paginados por página con los parámetros `Page` y `Size` (20 por defecto, 100 como
-  máximo) y una respuesta `{ items: [...], page: PageInfo }`. Orden siempre determinista,
-  terminando en el ID.
-- Nunca un array en la raíz de una respuesta; siempre dentro de un objeto.
-- Las propiedades sin valor se omiten (no se envía `null`).
+- Status codes: 201 with a `Location` header on creation, 204 for commands without a body,
+  200 for queries; 400 validation, 404 not found, 409 business rule or version conflict.
+  Errors reuse `components/responses` (`BadRequest`, `NotFound`, `Conflict`).
+- Identifiers as `integer` `int64` with `minimum: 1`.
+- Money with the `Money` schema (amount as a decimal string and ISO 4217 currency).
+- Dates as `string` `date-time` in UTC.
+- Enums by name in upper case.
+- Lists paginated by page with the `Page` and `Size` parameters (20 by default, 100 at most)
+  and a `{ items: [...], page: PageInfo }` response. Ordering is always deterministic, ending
+  with the ID.
+- Never an array at the root of a response; always inside an object.
+- Properties without a value are omitted (`null` is not sent).
 
-## Controladores
-- Un controlador por agregado (`OrderController`) que implementa la interfaz generada
-  (`OrdersApi`). Solo llama al caso de uso y construye la respuesta.
-- La conversión entre modelos generados y comandos, consultas o resultados vive en una clase
-  final package-private por agregado, junto al controlador: `OrderApiConversion`, con métodos
-  estáticos `toCommand(...)`, `toQuery(...)` y `toBody(...)`.
-- El importe de `Money` se convierte con `new BigDecimal(...)`; un formato inválido lanza
-  `NumberFormatException`, que ya sale como 400.
-- Los controladores no capturan excepciones.
+## Controllers
+- One controller per aggregate (`OrderController`) that implements the generated interface
+  (`OrdersApi`). It only calls the use case and builds the response.
+- Conversion between generated models and commands, queries or results lives in a final
+  package-private class per aggregate, next to the controller: `OrderApiConversion`, with
+  static methods `toCommand(...)`, `toQuery(...)` and `toBody(...)`.
+- The `Money` amount is converted with `new BigDecimal(...)`; an invalid format throws
+  `NumberFormatException`, which already becomes a 400.
+- Controllers do not catch exceptions.

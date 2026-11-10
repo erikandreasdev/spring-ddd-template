@@ -1,5 +1,5 @@
--- Una secuencia por tabla de agregado, restricciones con nombre, NOT NULL por defecto,
--- dinero como DECIMAL(19, 4) más la divisa, enums por nombre y fechas con zona horaria.
+-- One sequence per aggregate table, named constraints, NOT NULL by default,
+-- money as DECIMAL(19, 4) plus the currency, enums by name and time-zone-aware dates.
 
 CREATE SEQUENCE orders_seq;
 
@@ -18,7 +18,7 @@ CREATE TABLE orders (
 
 CREATE INDEX ix_orders_customer_id ON orders (customer_id, placed_at DESC, id DESC);
 
--- Colección del agregado: sin ID propio, clave compuesta por pedido y posición.
+-- Aggregate collection: no ID of its own, composite key of order and position.
 CREATE TABLE order_lines (
   order_id   BIGINT         NOT NULL,
   position   INT            NOT NULL,

@@ -1,10 +1,10 @@
-# Referencia: la especificación de la plantilla con los endpoints del agregado Order.
-# Los componentes comunes (Page, Size, BadRequest, NotFound, Conflict, Money, PageInfo, Problem)
-# ya existen en src/main/resources/openapi/api.yaml; aquí se repiten para que el fichero sea
-# válido por sí solo.
+# Reference: the template specification with the endpoints of the Order aggregate.
+# The common components (Page, Size, BadRequest, NotFound, Conflict, Money, PageInfo, Problem)
+# already exist in src/main/resources/openapi/api.yaml; they are repeated here so the file is
+# valid on its own.
 openapi: 3.0.3
 info:
-  title: CAMBIAME API
+  title: CHANGEME API
   version: 1.0.0
 servers:
   - url: /v1

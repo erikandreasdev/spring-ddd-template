@@ -1,12 +1,12 @@
 @startuml context-map
-' Mapa de contextos: solo cuando hay dos o más. Un componente por contexto y una flecha por
-' relación, en el sentido de la dependencia, con lo que se intercambia.
-title Mapa de contextos
+' Context map: only when there are two or more. One component per context and one arrow per
+' relationship, in the direction of the dependency, with what is exchanged.
+title Context map
 
 component "orders" as orders
 component "customers" as customers
-component "Proveedor de pagos\n(externo)" as payments #EEEEEE
+component "Payment provider\n(external)" as payments #EEEEEE
 
-orders --> customers : referencia CustomerId
-orders --> payments : PaymentGateway\n(cobro por HTTP)
+orders --> customers : references CustomerId
+orders --> payments : PaymentGateway\n(charge over HTTP)
 @enduml

@@ -11,10 +11,10 @@
     <relativePath/>
   </parent>
 
-  <groupId>com.CAMBIAME</groupId>
-  <artifactId>CAMBIAME</artifactId>
+  <groupId>com.CHANGEME</groupId>
+  <artifactId>CHANGEME</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>CAMBIAME</name>
+  <name>CHANGEME</name>
 
   <properties>
     <java.version>21</java.version>
@@ -52,7 +52,7 @@
       <artifactId>spring-boot-starter-opentelemetry</artifactId>
     </dependency>
 
-    <!-- CAMBIAME: base de datos. Driver JDBC y módulo de Flyway del motor que uses. -->
+    <!-- CHANGEME: database. JDBC driver and Flyway module for your engine. -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
@@ -74,7 +74,7 @@
       <artifactId>spring-boot-testcontainers</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- CAMBIAME: base de datos. Módulo de Testcontainers del motor que uses. -->
+    <!-- CHANGEME: database. Testcontainers module for your engine. -->
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-postgresql</artifactId>
@@ -113,8 +113,8 @@
             <configuration>
               <inputSpec>${project.basedir}/src/main/resources/openapi/api.yaml</inputSpec>
               <generatorName>spring</generatorName>
-              <apiPackage>com.CAMBIAME.shared.infrastructure.web.api</apiPackage>
-              <modelPackage>com.CAMBIAME.shared.infrastructure.web.api</modelPackage>
+              <apiPackage>com.CHANGEME.shared.infrastructure.web.api</apiPackage>
+              <modelPackage>com.CHANGEME.shared.infrastructure.web.api</modelPackage>
               <modelNameSuffix>Body</modelNameSuffix>
               <generateSupportingFiles>false</generateSupportingFiles>
               <generateApiTests>false</generateApiTests>
@@ -143,7 +143,7 @@
         <version>${jacoco.version}</version>
         <configuration>
           <excludes>
-            <!-- Código generado desde api.yaml -->
+            <!-- Code generated from api.yaml -->
             <exclude>**/shared/infrastructure/web/api/**</exclude>
           </excludes>
         </configuration>

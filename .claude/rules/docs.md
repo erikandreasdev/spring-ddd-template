@@ -3,27 +3,28 @@ paths:
   - "docs/**"
 ---
 
-# Documentación
+# Documentation
 
-Se escribe en español. Los nombres de clases, tablas y endpoints se mantienen tal cual.
+Written in English. Class, table and endpoint names are kept as they are.
 
-## Diagramas (PlantUML)
-- Un diagrama de clases por contexto: `docs/diagrams/<contexto>.puml`.
-- Contiene agregados (`<<Aggregate Root>>`), entidades (`<<Entity>>`) y value objects
-  (`<<Value Object>>`), con sus atributos de negocio y métodos públicos de negocio. Sin
-  repositorios, casos de uso ni detalles técnicos.
-- Las referencias por ID entre agregados se dibujan como dependencia discontinua con el nombre
-  del ID (`Order ..> Customer : customerId`). La composición, con rombo relleno.
-- Con dos o más contextos, además `docs/diagrams/context-map.puml`: un componente por contexto
-  y una flecha por relación, con la dirección de la dependencia y qué se intercambia.
-- Se actualizan en la misma tarea que cambia el modelo.
+## Diagrams (PlantUML)
+- One class diagram per context: `docs/diagrams/<context>.puml`.
+- It contains aggregates (`<<Aggregate Root>>`), entities (`<<Entity>>`) and value objects
+  (`<<Value Object>>`), with their business attributes and public business methods. No
+  repositories, use cases or technical details.
+- References by ID between aggregates are drawn as a dashed dependency labelled with the ID
+  name (`Order ..> Customer : customerId`). Composition, with a filled diamond.
+- With two or more contexts, also `docs/diagrams/context-map.puml`: one component per context
+  and one arrow per relationship, showing the direction of the dependency and what is
+  exchanged.
+- They are updated in the same task that changes the model.
 
-## ADRs (formato de Michael Nygard)
-- Uno por decisión: `docs/adr/NNNN-titulo-en-minusculas-con-guiones.md`, numerados en orden.
-- Se crean cuando se acepta una excepción a las reglas del proyecto, se elige entre
-  alternativas reales (una librería, una forma de integrar un servicio) o cambia una regla.
-  No para cada tarea.
-- Estructura fija: título, estado, contexto, decisión y consecuencias. Plantilla en
+## ADRs (Michael Nygard format)
+- One per decision: `docs/adr/NNNN-lowercase-title-with-hyphens.md`, numbered in order.
+- Created when an exception to the project rules is accepted, when choosing between real
+  alternatives (a library, a way to integrate a service) or when a rule changes. Not for every
+  task.
+- Fixed structure: title, status, context, decision and consequences. Template in
   `docs/adr/template.md`.
-- Un ADR aceptado no se reescribe: si cambia la decisión, se crea otro y el antiguo pasa a
-  `Sustituido por NNNN`.
+- An accepted ADR is never rewritten: if the decision changes, create a new one and mark the
+  old one as `Superseded by NNNN`.

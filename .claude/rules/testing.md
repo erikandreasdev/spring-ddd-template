@@ -5,74 +5,75 @@ paths:
 
 # Tests
 
-## Orden de trabajo (TDD)
-- Primero el test. Se escribe, se ejecuta y se comprueba que falla por el motivo esperado.
-  Después, el código mínimo que lo hace pasar. Después, refactorizar con los tests en verde.
-- Un test no se modifica para que pase, salvo que el propio test estuviera mal.
+## Work order (TDD)
+- Test first. Write it, run it and check that it fails for the expected reason. Then, the
+  minimum code that makes it pass. Then, refactor with the tests green.
+- A test is not modified to make it pass, unless the test itself was wrong.
 
-## Qué tests y cuántos
+## Which tests and how many
 
-| Nivel | Tipo | Cuántos |
+| Level | Type | How many |
 |---|---|---|
-| Dominio | Unitario, sin Spring | Uno por regla de negocio y por caso límite de cada value object |
-| Caso de uso | `@IntegrationTest` | Tres como máximo: camino feliz, "no existe" y un fallo de regla que demuestre el rollback |
-| Puerto de lectura | `@IntegrationTest` | Uno por cada filtro, orden o paginación |
-| Controlador | `@WebMvcTest` | Uno por código HTTP distinto de cada endpoint |
-| Flujo completo | `@IntegrationTest` por HTTP | Uno por agregado, con su flujo principal (`OrderFlowTest`) |
+| Domain | Unit, no Spring | One per business rule and per edge case of each value object |
+| Use case | `@IntegrationTest` | Three at most: happy path, "not found" and one rule failure that proves the rollback |
+| Read port | `@IntegrationTest` | One per filter, ordering or pagination |
+| Controller | `@WebMvcTest` | One per distinct HTTP status of each endpoint |
+| Full flow | `@IntegrationTest` over HTTP | One per aggregate, with its main flow (`OrderFlowTest`) |
 
-- Las reglas de negocio se prueban en el dominio, no se repiten en los casos de uso.
-- Los repositorios no tienen tests propios: los cubren los tests de casos de uso. La única
-  excepción es un test por agregado que guarda una versión antigua y espera
-  `ConcurrentUpdateException` (`MyBatisOrderRepositoryTest`).
+- Business rules are tested in the domain, not repeated in the use cases.
+- Repositories have no tests of their own: use case tests cover them. The only exception is
+  one test per aggregate that saves a stale version and expects `ConcurrentUpdateException`
+  (`MyBatisOrderRepositoryTest`).
 
-## Forma
-- Nombres `givenX_whenY_thenZ` y cuerpo separado con `// given`, `// when`, `// then`.
-- Un comportamiento por test, con todas las aserciones que lo describan.
-- La unidad es el comportamiento, no la clase: los agregados se prueban con sus value objects
-  reales. Sin mocks dentro del dominio.
-- AssertJ para todo; excepciones con `assertThatThrownBy`. Nada de aserciones de JUnit.
-- Se comprueba el resultado observable (estado, valor devuelto, excepción), no las llamadas.
-- Sin lógica en los tests: ni `if`, ni bucles, ni cálculo del valor esperado.
-- `@ParameterizedTest` solo para valores límite de un mismo comportamiento, con `name` legible.
-- `<Clase>Test` en el mismo paquete que la clase probada. Clases y métodos package-private.
-- `@BeforeEach` solo para preparación técnica, nunca para datos de negocio.
+## Shape
+- Names `givenX_whenY_thenZ` and a body split with `// given`, `// when`, `// then`.
+- One behaviour per test, with all the assertions that describe it.
+- The unit is the behaviour, not the class: aggregates are tested with their real value
+  objects. No mocks inside the domain.
+- AssertJ for everything; exceptions with `assertThatThrownBy`. No JUnit assertions.
+- Check the observable result (state, returned value, exception), not the calls.
+- No logic in tests: no `if`, no loops, no computing the expected value.
+- `@ParameterizedTest` only for boundary values of the same behaviour, with a readable `name`.
+- `<Class>Test` in the same package as the class under test. Classes and methods
+  package-private.
+- `@BeforeEach` only for technical setup, never for business data.
 
-## Datos de prueba
-- Un `*Mother` por agregado (clase pública en `src/test`, en el paquete del agregado) con una
-  factoría estática por escenario: `OrderMother.draftWithOneLine()`.
-- Los agregados se construyen siempre con las factorías y métodos de negocio del dominio.
-  Nunca con `restore(...)`, reflexión ni rellenando sus campos con Instancio.
-- Todo valor que el test no comprueba (IDs, nombres, importes, cantidades) se genera con
-  Instancio, tanto en los Mothers como en los tests.
-- Se usa un literal solo cuando el test comprueba ese valor o un resultado que depende de él.
-- Los valores aleatorios deben ser válidos para el dominio: rangos acotados
-  (`Instancio.gen().ints().range(1, 20).get()`), IDs positivos y coherencia entre ellos
-  (misma divisa).
-- En tests de dominio los IDs los genera Instancio; en tests de integración se piden al
-  repositorio con `nextId()`, para que coincidan con la secuencia.
-- La hora se fija con `Clock.fixed(...)` cuando el resultado depende de ella.
-- Toda clase de test que use Instancio lleva `@ExtendWith(InstancioExtension.class)`
-  (`@IntegrationTest` ya lo incluye). Si un test falla, se reproduce con la semilla que
-  imprime (`@Seed`) y se corrige el código o el generador; `@Seed` no se deja en el código.
+## Test data
+- One `*Mother` per aggregate (public class in `src/test`, in the aggregate's package) with a
+  static factory per scenario: `OrderMother.draftWithOneLine()`.
+- Aggregates are always built with the domain's factories and business methods. Never with
+  `restore(...)`, reflection or by filling their fields with Instancio.
+- Every value the test does not check (IDs, names, amounts, quantities) is generated with
+  Instancio, both in Mothers and in tests.
+- Use a literal only when the test checks that value or a result that depends on it.
+- Random values must be valid for the domain: bounded ranges
+  (`Instancio.gen().ints().range(1, 20).get()`), positive IDs and consistency between them
+  (same currency).
+- In domain tests IDs are generated by Instancio; in integration tests they are requested from
+  the repository with `nextId()`, so they match the sequence.
+- Time is fixed with `Clock.fixed(...)` when the result depends on it.
+- Every test class that uses Instancio has `@ExtendWith(InstancioExtension.class)`
+  (`@IntegrationTest` already includes it). If a test fails, reproduce it with the seed it
+  prints (`@Seed`) and fix the code or the generator; `@Seed` is not left in the code.
 
-## Tests con Spring
-- Integración siempre con `@IntegrationTest` (Spring y base de datos real con Testcontainers).
-  Nunca `@Testcontainers` ni `@DynamicPropertySource` por clase.
-- Los tests de casos de uso usan el repositorio real. Sin fakes ni mocks de repositorios. Cada
-  test crea sus datos con IDs nuevos y comprueba el estado leyendo del repositorio.
-- Sin `@Transactional` ni `@DirtiesContext` en los tests.
-- Controladores: `@WebMvcTest`, casos de uso sustituidos con `@MockitoBean` y aserciones con
-  `MockMvcTester`. Solo se comprueba la traducción HTTP, con las rutas completas (`/v1/...`).
-- Servicios externos: el adaptador real contra WireMock, con un único servidor compartido y la
-  URL base del adaptador apuntando a él. Nunca `@MockitoBean` ni fakes sobre puertos.
+## Tests with Spring
+- Integration always with `@IntegrationTest` (Spring and a real database with Testcontainers).
+  Never `@Testcontainers` or `@DynamicPropertySource` per class.
+- Use case tests use the real repository. No fakes or mocks of repositories. Each test creates
+  its data with new IDs and checks the state by reading from the repository.
+- No `@Transactional` or `@DirtiesContext` in tests.
+- Controllers: `@WebMvcTest`, use cases replaced with `@MockitoBean` and assertions with
+  `MockMvcTester`. Only the HTTP translation is checked, with full paths (`/v1/...`).
+- External services: the real adapter against WireMock, with a single shared server and the
+  adapter's base URL pointing to it. Never `@MockitoBean` or fakes on ports.
 
-## Cobertura
-- JaCoCo exige un 80 % de ramas en todo el proyecto; `mvn verify` falla si no se alcanza.
-- Antes de dar por terminada una funcionalidad se ejecuta `mvn verify`.
-- No se escriben tests sin aserciones ni se añaden exclusiones para subir el porcentaje.
+## Coverage
+- JaCoCo requires 80% branch coverage across the whole project; `mvn verify` fails otherwise.
+- Run `mvn verify` before considering a feature done.
+- Do not write tests without assertions or add exclusions to raise the percentage.
 
-## Referencias
+## References
 
-Hay un test de referencia de cada nivel en `.claude/references/test/` (índice en
-`.claude/references/INDEX.md`): Mother, dominio, value object, caso de uso, caso de uso con
-WireMock, puerto de lectura, concurrencia, controlador y flujo completo.
+There is a reference test for each level in `.claude/references/test/` (index in
+`.claude/references/INDEX.md`): Mother, domain, value object, use case, use case with
+WireMock, read port, concurrency, controller and full flow.

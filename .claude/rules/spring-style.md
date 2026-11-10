@@ -4,39 +4,38 @@ paths:
   - "src/main/resources/**"
 ---
 
-# Estilo Spring
+# Spring style
 
-Spring solo se usa en `infrastructure`.
+Spring is only used in `infrastructure`.
 
-## Configuración y cableado
-- Inyección por constructor, con un único constructor y sin `@Autowired`. Nunca en campos ni
-  en setters. Nunca `ApplicationContext.getBean(...)`.
-- Los adaptadores se registran con estereotipos (`@RestController`, `@Repository`,
-  `@Component`) y son package-private.
-- Propiedades: un record `@ConfigurationProperties` con `@Validated` por adaptador
-  (`PaymentProperties`). Nunca `@Value`.
-- Sin `@Profile` en código de producción. Lo que cambia entre entornos son valores de
-  `application.yml` resueltos con variables de entorno. Los secretos, solo por variables de
-  entorno.
-- Configuración siempre en `application.yml`, nunca en `.properties`.
-- Clases de configuración con `@Configuration(proxyBeanMethods = false)`.
-- Nunca `@Transactional`: la transacción la pone `UseCaseConfig` en los casos de uso.
-- La hora la da el bean `Clock` de `ClockConfig`.
+## Configuration and wiring
+- Constructor injection, with a single constructor and no `@Autowired`. Never on fields or
+  setters. Never `ApplicationContext.getBean(...)`.
+- Adapters are registered with stereotypes (`@RestController`, `@Repository`, `@Component`)
+  and are package-private.
+- Properties: one `@ConfigurationProperties` record with `@Validated` per adapter
+  (`PaymentProperties`). Never `@Value`.
+- No `@Profile` in production code. What changes between environments are values in
+  `application.yml` resolved from environment variables. Secrets only through environment
+  variables.
+- Configuration always in `application.yml`, never in `.properties`.
+- Configuration classes with `@Configuration(proxyBeanMethods = false)`.
+- Never `@Transactional`: `UseCaseConfig` applies the transaction to use cases.
+- The time comes from the `Clock` bean in `ClockConfig`.
 
-## Servicios HTTP externos
-- `RestClient` dentro del adaptador que implementa el puerto, con URL base y timeouts en su
-  record de propiedades. Nunca `RestTemplate` ni Feign.
+## External HTTP services
+- `RestClient` inside the adapter that implements the port, with base URL and timeouts in its
+  properties record. Never `RestTemplate` or Feign.
 
-## Logs y observabilidad
-- Solo se registra en infraestructura. Ya existen el log de peticiones (`RequestLoggingFilter`)
-  y el de errores (`ApiExceptionHandler`); no se añaden logs de entrada o salida de métodos.
-- Una excepción se registra una sola vez, en `ApiExceptionHandler`: los 5xx como `ERROR` con
-  traza; los 4xx no se registran.
-- Los adaptadores a servicios externos pueden registrar `WARN` en reintentos o fallos de
-  integración. `ERROR` solo para lo que requiere intervención. `DEBUG` libre.
-- Nunca se registran contraseñas, tokens, datos de tarjetas ni datos personales (emails,
-  nombres, direcciones). Se registran IDs.
-- Mensajes en inglés, con placeholders de SLF4J y sin concatenar cadenas.
-- El `traceId` lo pone Micrometer Tracing en cada línea de log y en las respuestas de error.
-  No se gestiona a mano.
-- Actuator expone solo `health` (con `liveness` y `readiness`) e `info`.
+## Logging and observability
+- Logging only happens in infrastructure. Request logging (`RequestLoggingFilter`) and error
+  logging (`ApiExceptionHandler`) already exist; do not add method entry or exit logs.
+- An exception is logged only once, in `ApiExceptionHandler`: 5xx as `ERROR` with stack trace;
+  4xx are not logged.
+- Adapters to external services may log `WARN` on retries or integration failures. `ERROR`
+  only for what requires intervention. `DEBUG` freely.
+- Never log passwords, tokens, card data or personal data (emails, names, addresses). Log IDs.
+- Messages in English, with SLF4J placeholders and no string concatenation.
+- Micrometer Tracing puts the `traceId` on every log line and in error responses. It is not
+  handled by hand.
+- Actuator exposes only `health` (with `liveness` and `readiness`) and `info`.

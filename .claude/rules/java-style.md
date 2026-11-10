@@ -3,55 +3,53 @@ paths:
   - "**/*.java"
 ---
 
-# Estilo Java
+# Java style
 
-## Tipos y datos
-- Nunca se pasa ni se devuelve `null`. `Optional` solo como tipo de retorno; nunca en campos,
-  parámetros ni colecciones. Una colección sin elementos se devuelve vacía.
-- Variantes de un concepto: `sealed interface` con records. El comportamiento intrínseco de la
-  variante va como método en la interfaz; la lógica externa usa un `switch` de patrones
-  exhaustivo, siempre sin `default`.
-- `var` solo cuando el tipo se ve en la misma línea (`new`, o una factoría del propio tipo
-  como `OrderId.newId()`). En el resto, tipo explícito.
-- `final` en parámetros de métodos y constructores, variables locales y variables de
-  `for-each` y `catch`. No en parámetros de lambdas.
-- Campos `private final` siempre que sea posible.
-- Las colecciones se copian al recibirlas (`List.copyOf`) y nunca se expone una mutable.
+## Types and data
+- Never pass or return `null`. `Optional` only as a return type; never in fields, parameters
+  or collections. A collection without elements is returned empty.
+- Variants of a concept: `sealed interface` with records. Behaviour intrinsic to the variant
+  goes as a method on the interface; external logic uses an exhaustive pattern `switch`,
+  always without `default`.
+- `var` only when the type is visible on the same line (`new`, or a factory of the type itself
+  such as `OrderId.newId()`). Otherwise, an explicit type.
+- `final` on method and constructor parameters, local variables and `for-each` and `catch`
+  variables. Not on lambda parameters.
+- Fields `private final` whenever possible.
+- Collections are copied on receipt (`List.copyOf`) and a mutable one is never exposed.
 
-## Errores
-- Los fallos de negocio se expresan con excepciones, no con tipos de resultado.
-- Cada regla de negocio incumplida tiene su excepción, que extiende `DomainException`
-  (`OrderNotEditableException`). Las de "no existe" extienden `NotFoundException`.
-- Las precondiciones usan las estándar: `Objects.requireNonNull` e `IllegalArgumentException`.
-- Los mensajes incluyen los identificadores de los datos que fallaron.
-- Las excepciones comprobadas de librerías se traducen en el adaptador a una excepción propia
-  no comprobada que conserva la causa.
-- Nunca se captura `Exception` o `Throwable` de forma genérica ni se deja un `catch` vacío.
-  La única excepción es `ApiExceptionHandler`, que traduce lo inesperado a un 500.
-- Recursos siempre con `try-with-resources`.
+## Errors
+- Business failures are expressed with exceptions, not result types.
+- Every broken business rule has its own exception, extending `DomainException`
+  (`OrderNotEditableException`). "Not found" ones extend `NotFoundException`.
+- Preconditions use the standard ones: `Objects.requireNonNull` and `IllegalArgumentException`.
+- Messages include the identifiers of the data that failed.
+- Checked exceptions from libraries are translated in the adapter into an own unchecked
+  exception that keeps the cause.
+- Never catch `Exception` or `Throwable` generically or leave an empty `catch`. The only
+  exception is `ApiExceptionHandler`, which translates the unexpected into a 500.
+- Resources always with `try-with-resources`.
 
-## Flujo
-- Streams para transformar, filtrar y agregar sin efectos secundarios. Bucle `for` cuando hay
-  efectos, salida anticipada o lanzamiento de excepciones.
-- Cláusulas de guarda con retorno anticipado. Sin `else` después de un `return` o `throw`.
+## Flow
+- Streams to transform, filter and aggregate without side effects. A `for` loop when there are
+  side effects, early exit or thrown exceptions.
+- Guard clauses with early return. No `else` after a `return` or `throw`.
 
-## Métodos y clases
-- Un método se lee de arriba abajo. Se extrae un método privado solo cuando el fragmento tiene
-  nombre en el lenguaje de negocio o se repite. Ningún método supera unas 25 líneas.
-- Como mucho cuatro parámetros; si hacen falta más, se agrupan en un value object. Sin
-  builders en código de producción. Excepción: los constructores de inyección de clases de
-  Spring (un controlador recibe todos los casos de uso de su agregado). Si pasan de unos seis,
-  es señal de partir la clase.
-- Sin comentarios que repitan lo que dice el código y sin Javadoc por defecto. Solo se comenta
-  el porqué que el código no puede expresar.
-- Accesores con estilo record en las clases de dominio: `order.id()`, `order.status()`. Nunca
-  `getX()`. Los booleanos sí usan `isX()`.
-- Visibilidad mínima: package-private por defecto; `public` solo cuando otro paquete lo
-  necesita.
-- Las clases de dominio son `final`. Las clases gestionadas por Spring (casos de uso,
-  controladores, adaptadores) no lo son, porque Spring puede necesitar extenderlas.
-- Nombres en inglés, con el lenguaje de negocio, sin abreviaturas y sin sufijos `Impl`,
-  `Helper`, `Utils` ni `DTO`.
-- Fechas y horas como `Instant` (UTC). La hora actual sale de un `Clock` inyectado.
-- Logging solo en infraestructura (reglas en `spring-style.md`).
-- El código generado desde `api.yaml` no sigue estas reglas y nunca se edita a mano.
+## Methods and classes
+- A method reads top to bottom. Extract a private method only when the fragment has a name in
+  the business language or is repeated. No method exceeds about 25 lines.
+- At most four parameters; if more are needed, group them in a value object. No builders in
+  production code. Exception: injection constructors of Spring classes (a controller receives
+  all the use cases of its aggregate). Beyond about six, it is a sign to split the class.
+- No comments that repeat what the code says and no Javadoc by default. Only comment the why
+  that the code cannot express.
+- Record-style accessors in domain classes: `order.id()`, `order.status()`. Never `getX()`.
+  Booleans do use `isX()`.
+- Minimal visibility: package-private by default; `public` only when another package needs it.
+- Domain classes are `final`. Spring-managed classes (use cases, controllers, adapters) are
+  not, because Spring may need to extend them.
+- Names in English, in the business language, without abbreviations and without `Impl`,
+  `Helper`, `Utils` or `DTO` suffixes.
+- Dates and times as `Instant` (UTC). The current time comes from an injected `Clock`.
+- Logging only in infrastructure (rules in `spring-style.md`).
+- Code generated from `api.yaml` does not follow these rules and is never edited by hand.

@@ -1,17 +1,17 @@
-# NNNN. Título de la decisión
+# NNNN. Decision title
 
-## Estado
+## Status
 
-Propuesto | Aceptado | Sustituido por NNNN
+Proposed | Accepted | Superseded by NNNN
 
-## Contexto
+## Context
 
-Qué problema hay que resolver, qué restricciones existen y qué alternativas se valoraron.
+What problem needs solving, what constraints exist and which alternatives were considered.
 
-## Decisión
+## Decision
 
-Qué se ha decidido, en frases afirmativas ("Usaremos...").
+What was decided, in affirmative sentences ("We will use...").
 
-## Consecuencias
+## Consequences
 
-Qué cambia a partir de ahora: lo que se gana, lo que se pierde y lo que queda pendiente.
+What changes from now on: what is gained, what is lost and what remains pending.

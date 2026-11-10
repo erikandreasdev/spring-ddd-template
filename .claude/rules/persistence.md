@@ -4,31 +4,31 @@ paths:
   - "src/main/resources/db/**"
 ---
 
-# Persistencia
+# Persistence
 
-## Mappers y repositorios
-- Mappers con SQL en anotaciones y text blocks. Parámetros siempre con `#{}`, nunca `${}`.
-- La conversión entre `*Row` y dominio se hace en la implementación del repositorio, sin
-  `TypeHandler` para los IDs tipados.
-- `nextId()` lee la secuencia de la tabla. En PostgreSQL: `SELECT nextval('orders_seq')`.
-  <!-- CAMBIAME: base de datos. Sintaxis de las secuencias en tu motor -->
-- `save(...)` decide por la versión: si es 0, `INSERT` con versión 1; si no,
+## Mappers and repositories
+- Mappers with SQL in annotations and text blocks. Parameters always with `#{}`, never `${}`.
+- Conversion between `*Row` and domain happens in the repository implementation, without a
+  `TypeHandler` for typed IDs.
+- `nextId()` reads the table's sequence. In PostgreSQL: `SELECT nextval('orders_seq')`.
+  <!-- CHANGEME: database. Sequence syntax in your engine -->
+- `save(...)` decides by version: if it is 0, `INSERT` with version 1; otherwise,
   `UPDATE ... SET ..., version = version + 1 WHERE id = #{id} AND version = #{version}`.
-  Si el `UPDATE` afecta a 0 filas, lanza `ConcurrentUpdateException`.
-- Las colecciones del agregado se guardan borrando y reinsertando sus filas en el mismo
+  If the `UPDATE` affects 0 rows, it throws `ConcurrentUpdateException`.
+- The aggregate's collections are saved by deleting and reinserting their rows in the same
   `save(...)`.
 
-## Esquema
-- Cambios solo con Flyway: `src/main/resources/db/migration/V<n>__<descripcion>.sql`. Una
-  migración ya aplicada no se modifica; se añade otra.
-- Tablas en plural y `snake_case`: `orders`, `order_lines`.
-- Cada tabla de agregado tiene su secuencia (`orders_seq`), clave primaria `id BIGINT` y
-  columna `version BIGINT NOT NULL`.
-- Las tablas de colecciones usan clave compuesta: ID del agregado más `position`.
-- Restricciones con nombre explícito: `pk_orders`, `fk_order_lines_orders`,
-  `uk_customers_email`. Índice en toda clave ajena.
-- `NOT NULL` por defecto.
-- Dinero: `DECIMAL(19, 4)` más la divisa en `CHAR(3)`.
-- Enums guardados por nombre, nunca por posición.
-- Fechas en columna con zona horaria, en UTC.
-- Borrados físicos. Sin columnas `deleted` salvo que el negocio necesite historial.
+## Schema
+- Changes only with Flyway: `src/main/resources/db/migration/V<n>__<description>.sql`. A
+  migration that has already been applied is never modified; add a new one.
+- Tables in plural and `snake_case`: `orders`, `order_lines`.
+- Every aggregate table has its sequence (`orders_seq`), primary key `id BIGINT` and a
+  `version BIGINT NOT NULL` column.
+- Collection tables use a composite key: aggregate ID plus `position`.
+- Constraints with explicit names: `pk_orders`, `fk_order_lines_orders`,
+  `uk_customers_email`. An index on every foreign key.
+- `NOT NULL` by default.
+- Money: `DECIMAL(19, 4)` plus the currency in `CHAR(3)`.
+- Enums stored by name, never by position.
+- Dates in a time-zone-aware column, in UTC.
+- Physical deletes. No `deleted` columns unless the business needs history.

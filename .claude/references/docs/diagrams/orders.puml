@@ -1,6 +1,6 @@
 @startuml orders
-' Diagrama de clases de un contexto: solo modelo de dominio, sin repositorios ni casos de uso.
-title Contexto: orders
+' Class diagram of a context: domain model only, no repositories or use cases.
+title Context: orders
 
 hide empty members
 skinparam classAttributeIconSize 0
@@ -52,7 +52,7 @@ class Money <<Value Object>> {
 }
 
 class Customer <<Aggregate Root>> #EEEEEE
-note right of Customer : Contexto customers
+note right of Customer : customers context
 
 Order *-- "0..*" OrderLine : lines
 Order *-- "1" Discount : discount
