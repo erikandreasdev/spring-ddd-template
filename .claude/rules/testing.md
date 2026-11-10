@@ -74,6 +74,6 @@ paths:
 
 ## References
 
-There is a reference test for each level in `.claude/references/test/` (index in
+There is a reference test for each level in `.claude/references/tests.md` (index in
 `.claude/references/INDEX.md`): Mother, domain, value object, use case, use case with
 WireMock, read port, concurrency, controller and full flow.

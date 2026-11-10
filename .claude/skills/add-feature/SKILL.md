@@ -21,7 +21,8 @@ Review the ADRs in `docs/adr/` first so you do not contradict decisions already 
 ## 2. Implementation
 
 In each step, write the test first, check that it fails and then implement. Before creating
-each class, open its reference in `.claude/references/INDEX.md` and follow its shape.
+each class, open the reference file for its layer (listed in `.claude/references/INDEX.md`)
+and follow the shape of its kind.
 
 1. API: change `api.yaml` and run `mvn generate-sources`.
 2. Domain: unit test for the rule; then the aggregate, value object or business method.
@@ -42,6 +43,8 @@ each class, open its reference in `.claude/references/INDEX.md` and follow its s
 
 ## References
 
-`.claude/references/INDEX.md` has a complete example context (`orders`) with one file for each
-kind of class: aggregate, value objects, use cases, ports, controller, web conversion,
-mappers, repository, migration, HTTP adapter, tests at every level, diagrams and ADR.
+`.claude/references/` has a complete example context (`orders`) as one Markdown file per layer
+(`domain.md`, `application.md`, `infrastructure.md`, `tests.md`, `docs.md`), indexed in
+`INDEX.md`: aggregate, value objects, commands, queries, results, use cases, ports, controller,
+web conversion, mappers, repository, migration, HTTP adapter, tests at every level, diagrams
+and ADR.

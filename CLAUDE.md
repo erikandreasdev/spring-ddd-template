@@ -92,7 +92,7 @@ Dependencies only point inwards: `infrastructure → application → domain`.
 | Tests | `.claude/rules/testing.md` |
 | Diagrams and ADRs | `.claude/rules/docs.md` |
 | Adding or changing a feature | `add-feature` skill (procedure) |
-| Example of each kind of class | `.claude/references/INDEX.md` |
+| Example of each kind of class | `.claude/references/INDEX.md` (one file per layer) |
 
 Rules load automatically when you read a file in their area. If you are going to write code in
 an area where you have not read any file yet, read the matching rule first. Before creating a

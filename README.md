@@ -28,7 +28,7 @@ without changes; if that is your database, just delete the comments.
 | `src/test/java/com/CHANGEME/TestcontainersConfig.java` | Container class and image |
 | `CLAUDE.md` (two comments) | Database name and format command |
 | `.claude/rules/persistence.md` | Sequence syntax |
-| `.claude/references/INDEX.md` | SQL syntax of the references |
+| `.claude/references/infrastructure.md` | SQL syntax of the references |
 
 Delete each `CHANGEME:` comment once resolved, so the next step does not alter it.
 
@@ -43,7 +43,7 @@ grep -rl "CHANGEME" --exclude=README.md . | xargs sed -i "s/CHANGEME/$NAME/g"
 find . -depth -type d -name CHANGEME -execdir mv CHANGEME "$NAME" \;
 ```
 
-The `find` renames the four package folders: the ones in `src/` and in `.claude/references/`.
+The `find` renames the two package folders: `src/main/java/com/` and `src/test/java/com/`.
 
 On macOS, `sed -i` needs an empty argument: use `sed -i ''` instead of `sed -i`.
 
@@ -96,7 +96,7 @@ project folder. It starts in plan mode: it edits nothing until you approve the p
 | `.claude/rules/testing.md` | Test strategy and style; when reading `src/test` |
 | `.claude/rules/docs.md` | Diagrams and ADRs; when reading `docs/` |
 | `.claude/skills/add-feature/` | Procedure for adding a feature |
-| `.claude/references/` | One example of each kind of class (`orders` context), indexed in `INDEX.md`. Not compiled |
+| `.claude/references/` | One example of each kind of class (`orders` context) as a Markdown file per layer, indexed in `INDEX.md`. Not compiled |
 | `.claude/settings.local.json` | Plan mode by default, permissions and the hook |
 | `.claude/hooks/architecture-check.sh` | Runs `ArchitectureTest` at the end of every turn |
 
