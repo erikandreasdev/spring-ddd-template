@@ -9,7 +9,8 @@ description: Adds or changes a feature (use case, endpoint, aggregate, repositor
 
 Before writing anything, present a plan with:
 
-- Which files are created or changed, per layer.
+- Which files are created or changed, per layer, each with the package that `doc/ai/architecture.md`
+  assigns to its kind.
 - Changes to `api.yaml` (endpoints, schemas, response codes).
 - Changes to the domain model and the database schema. Destructive migrations, flagged
   separately.
@@ -18,16 +19,20 @@ Before writing anything, present a plan with:
 ## 2. Implementation
 
 In each step, write the test first, check that it fails and then implement. Before creating
-each class, open the reference file for its layer (listed in `.github/references/INDEX.md`)
-and follow the shape of its kind.
+each class, read `doc/ai/architecture.md` for its package and open the reference file for its
+layer (listed in `.github/references/INDEX.md`) to follow the shape of its kind.
 
 1. API: change `api.yaml` and run `mvn generate-sources`.
-2. Domain: unit test for the rule; then the aggregate, value object or business method.
+2. Domain: unit test for the rule; then the aggregate, value object or business method (and,
+   if needed, a guard, policy or domain service in their packages).
 3. Persistence: Flyway migration (table, sequence, constraints); repository interface in
-   `domain`; implementation and mapper in `infrastructure.persistence`.
-4. Use case: integration test; then the `*Command` or `*Query` and the `@UseCase` class.
-5. Web: controller test; then the `*ApiConversion` class and the controller that implements
-   the generated interface.
+   `domain.repository`; adapter, `*Row`, MyBatis mapper and `*Mapping` in
+   `infrastructure.persistence.mybatis` and its `row`, `mapper` and `mapping` packages.
+4. Use case: integration test; then the `*Command` or `*Query` (`dto.commands`, `dto.queries`),
+   the result record (`dto.results`), the application mapper (`mapper`) and the `@UseCase` class
+   (`usecases`).
+5. Rest: controller test; then the `*ApiConversion` class (`rest.mapper`) and the controller
+   (`rest.controller`) that implements the generated interface.
 6. Flow: add or extend the `<Aggregate>FlowTest` if the main flow changes.
 7. Documentation: update `docs/diagrams/<context>.puml` if the model changed (and the context
    map if there are several).
@@ -41,6 +46,7 @@ and follow the shape of its kind.
 ## References
 
 `.github/references/` has a complete example context (`orders`) as one Markdown file per layer
-(`domain.md`, `application.md`, `infrastructure.md`, `tests.md`, `docs.md`), indexed in
-`INDEX.md`: aggregate, value objects, commands, queries, results, use cases, ports, controller,
-web conversion, mappers, repository, migration, HTTP adapter, tests at every level, diagrams.
+(`domain.md`, `application.md`, `infrastructure.md`, `tests.md`, `diagrams.md`), indexed in
+`INDEX.md`: aggregate, value objects, guards, policies, domain services, commands, queries,
+results, application mappers, use cases, ports, controller, rest conversion, MyBatis mappers,
+rows, persistence mapping, repository, migration, HTTP adapter, tests at every level, diagrams.

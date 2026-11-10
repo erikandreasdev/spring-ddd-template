@@ -6,8 +6,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.GeneralCodingRules.NO_CLASSES_SHOULD_USE_FIELD_INJECTION;
 
-import com.CHANGEME.shared.application.UseCase;
-import com.CHANGEME.shared.domain.DomainException;
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.common.domain.exception.DomainException;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Rules described in CLAUDE.md and .claude/rules. If one fails, fix the code. */
+/** Rules described in doc/ai/architecture.md. If one fails, fix the code. */
 @AnalyzeClasses(
     packagesOf = ArchitectureTest.class,
     importOptions = ImportOption.DoNotIncludeTests.class)
@@ -54,12 +54,12 @@ class ArchitectureTest {
   // ---- Use cases ------------------------------------------------------------------------
 
   @ArchTest
-  static final ArchRule useCasesLiveInApplicationAndAreNamedService =
+  static final ArchRule useCasesLiveInUsecasesAndAreNamedService =
       classes()
           .that()
           .areAnnotatedWith(UseCase.class)
           .should()
-          .resideInAPackage("..application..")
+          .resideInAPackage("..application.usecases..")
           .andShould()
           .haveSimpleNameEndingWith("Service")
           .andShould()
@@ -97,7 +97,7 @@ class ArchitectureTest {
           .and()
           .areInterfaces()
           .should()
-          .resideInAPackage("..domain..")
+          .resideInAPackage("..domain.repository..")
           .allowEmptyShould(true);
 
   @ArchTest
@@ -108,25 +108,25 @@ class ArchitectureTest {
           .and()
           .areNotInterfaces()
           .should()
-          .resideInAPackage("..infrastructure.persistence..")
+          .resideInAPackage("..infrastructure.persistence.mybatis..")
           .allowEmptyShould(true);
 
   // ---- Web adapters ---------------------------------------------------------------------
 
   @ArchTest
-  static final ArchRule controllersLiveInWeb =
+  static final ArchRule controllersLiveInRestController =
       classes()
           .that()
           .areAnnotatedWith(RestController.class)
           .should()
-          .resideInAPackage("..infrastructure.web..")
+          .resideInAPackage("..infrastructure.rest.controller..")
           .allowEmptyShould(true);
 
   @ArchTest
-  static final ArchRule webDoesNotBypassUseCases =
+  static final ArchRule restDoesNotBypassUseCases =
       noClasses()
           .that()
-          .resideInAPackage("..infrastructure.web..")
+          .resideInAPackage("..infrastructure.rest..")
           .should()
           .dependOnClassesThat()
           .haveSimpleNameEndingWith("Repository")
@@ -135,15 +135,142 @@ class ArchitectureTest {
           .resideInAPackage("..infrastructure.persistence..")
           .allowEmptyShould(true);
 
-  // Code generated from api.yaml: only web adapters use it.
+  // Code generated from api.yaml: only rest adapters use it.
   @ArchTest
-  static final ArchRule generatedApiIsUsedOnlyByWebAdapters =
+  static final ArchRule generatedApiIsUsedOnlyByRestAdapters =
       noClasses()
           .that()
-          .resideOutsideOfPackage("..infrastructure.web..")
+          .resideOutsideOfPackage("..infrastructure.rest..")
           .should()
           .dependOnClassesThat()
-          .resideInAPackage("..shared.infrastructure.web.api..")
+          .resideInAPackage("..infrastructure.rest.api..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule restConversionsLiveInRestMapper =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("ApiConversion")
+          .should()
+          .resideInAPackage("..infrastructure.rest.mapper..")
+          .allowEmptyShould(true);
+
+  // ---- Package structure (doc/ai/architecture.md) -----------------------------------------
+
+  @ArchTest
+  static final ArchRule commandsLiveInDtoCommands =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("Command")
+          .should()
+          .resideInAPackage("..application.dto.commands..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule dtoCommandsAreNamedCommand =
+      classes()
+          .that()
+          .resideInAPackage("..application.dto.commands..")
+          .should()
+          .haveSimpleNameEndingWith("Command")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule queriesLiveInDtoQueries =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("Query")
+          .should()
+          .resideInAPackage("..application.dto.queries..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule dtoQueriesAreNamedQuery =
+      classes()
+          .that()
+          .resideInAPackage("..application.dto.queries..")
+          .should()
+          .haveSimpleNameEndingWith("Query")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule applicationMappersLiveInMapper =
+      classes()
+          .that()
+          .resideInAPackage("..application..")
+          .and()
+          .haveSimpleNameEndingWith("Mapper")
+          .should()
+          .resideInAPackage("..application.mapper..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule domainExceptionsLiveInExceptionPackage =
+      classes()
+          .that()
+          .resideInAPackage("..domain..")
+          .and()
+          .areAssignableTo(DomainException.class)
+          .should()
+          .resideInAPackage("..domain.exception..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule domainServicesLiveInServices =
+      classes()
+          .that()
+          .resideInAPackage("..domain..")
+          .and()
+          .haveSimpleNameEndingWith("Service")
+          .should()
+          .resideInAPackage("..domain.services..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule policiesLiveInPolicies =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("Policy")
+          .should()
+          .resideInAPackage("..domain.policies..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule guardsLiveInGuards =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("Guard")
+          .should()
+          .resideInAPackage("..domain.guards..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule persistenceRowsLiveInRow =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("Row")
+          .should()
+          .resideInAPackage("..infrastructure.persistence.mybatis.row..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule persistenceMappersLiveInMapper =
+      classes()
+          .that()
+          .resideInAPackage("..infrastructure.persistence..")
+          .and()
+          .haveSimpleNameEndingWith("Mapper")
+          .should()
+          .resideInAPackage("..infrastructure.persistence.mybatis.mapper..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule persistenceMappingsLiveInMapping =
+      classes()
+          .that()
+          .haveSimpleNameEndingWith("Mapping")
+          .should()
+          .resideInAPackage("..infrastructure.persistence.mybatis.mapping..")
           .allowEmptyShould(true);
 
   // ---- Java style -----------------------------------------------------------------------

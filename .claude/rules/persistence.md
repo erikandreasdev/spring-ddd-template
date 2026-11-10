@@ -8,8 +8,9 @@ paths:
 
 ## Mappers and repositories
 - Mappers with SQL in annotations and text blocks. Parameters always with `#{}`, never `${}`.
-- Conversion between `*Row` and domain happens in the repository implementation, without a
-  `TypeHandler` for typed IDs.
+- The repository adapter lives in `persistence.mybatis`, rows in `.row` and MyBatis mappers in
+  `.mapper`. Conversion between `*Row` and domain happens in a `*Mapping` class in `.mapping`
+  (`OrderMapping`), without a `TypeHandler` for typed IDs.
 - `nextId()` reads the table's sequence. In PostgreSQL: `SELECT nextval('orders_seq')`.
   <!-- CHANGEME: database. Sequence syntax in your engine -->
 - `save(...)` decides by version: if it is 0, `INSERT` with version 1; otherwise,

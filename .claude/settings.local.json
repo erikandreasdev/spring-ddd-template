@@ -12,6 +12,7 @@
     "ask": [
       "Edit(/CLAUDE.md)",
       "Edit(/.claude/**)",
+      "Edit(/doc/ai/**)",
       "Edit(/src/test/java/**/ArchitectureTest.java)",
       "Edit(/pom.xml)"
     ]

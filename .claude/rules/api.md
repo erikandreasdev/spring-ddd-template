@@ -1,7 +1,7 @@
 ---
 paths:
   - "src/main/resources/openapi/**"
-  - "src/main/java/**/infrastructure/web/**/*.java"
+  - "src/main/java/**/infrastructure/rest/**/*.java"
 ---
 
 # API (contract-first)
@@ -9,7 +9,7 @@ paths:
 ## The specification rules
 - Every API change starts in `src/main/resources/openapi/api.yaml`. Then regenerate
   (`mvn generate-sources`) and implement.
-- Generated code (`shared.infrastructure.web.api`, in `target/generated-sources`) is never
+- Generated code (`infrastructure.rest.api`, in `target/generated-sources`) is never
   edited by hand.
 - OpenAPI 3.0. One tag (`tags`) per aggregate, which generates the `<Tag>Api` interface
   (`orders` → `OrdersApi`).
@@ -37,11 +37,11 @@ paths:
 - Properties without a value are omitted (`null` is not sent).
 
 ## Controllers
-- One controller per aggregate (`OrderController`) that implements the generated interface
-  (`OrdersApi`). It only calls the use case and builds the response.
-- Conversion between generated models and commands, queries or results lives in a final
-  package-private class per aggregate, next to the controller: `OrderApiConversion`, with
-  static methods `toCommand(...)`, `toQuery(...)` and `toBody(...)`.
+- One controller per aggregate (`OrderController`, in `rest.controller`) that implements the
+  generated interface (`OrdersApi`). It only calls the use case and builds the response.
+- Conversion between generated models and commands, queries or results lives in a public final
+  class per aggregate in `rest.mapper`: `OrderApiConversion`, with public static methods
+  `toCommand(...)`, `toQuery(...)` and `toBody(...)`.
 - The `Money` amount is converted with `new BigDecimal(...)`; an invalid format throws
   `NumberFormatException`, which already becomes a 400.
 - Controllers do not catch exceptions.

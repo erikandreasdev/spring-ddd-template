@@ -4,29 +4,30 @@ An example `orders` context. Copy the shape (names, visibility, validation, `fin
 The `//` comments explain the pattern for you; they are not copied into project code, which only carries comments about the why.
 The code blocks are not compiled or run. The source of truth is the rules; if anything conflicts, the rules win.
 
-Rules: the `infrastructure` section of `.github/copilot-instructions.md`, `.github/instructions/spring-style.instructions.md`, `.github/instructions/api.instructions.md` and `.github/instructions/persistence.instructions.md`.
+Rules: `doc/ai/architecture.md` (infrastructure layer packages), `doc/ai/code-conventions.md` (infrastructure rules), `.github/instructions/infrastructure.instructions.md`, `.github/instructions/spring.instructions.md`, `.github/instructions/api.instructions.md` and `.github/instructions/persistence.instructions.md`.
 The SQL is PostgreSQL. <!-- CHANGEME: database. Adapt sequences, types and LIMIT/OFFSET to your engine -->
 The HTTP adapter needs a dependency the template does not include: `spring-boot-starter-restclient`. Include it in the plan when the first external service appears.
 
 ## Controller
 
-`src/main/java/com/CHANGEME/orders/infrastructure/web/OrderController.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/rest/controller/OrderController.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.web;
+package com.CHANGEME.orders.infrastructure.rest.controller;
 
-import com.CHANGEME.orders.application.AddOrderLineService;
-import com.CHANGEME.orders.application.ConfirmOrderService;
-import com.CHANGEME.orders.application.GetOrderService;
-import com.CHANGEME.orders.application.ListCustomerOrdersService;
-import com.CHANGEME.orders.application.PayOrderService;
-import com.CHANGEME.orders.application.PlaceOrderService;
+import com.CHANGEME.infrastructure.rest.api.AddOrderLineBody;
+import com.CHANGEME.infrastructure.rest.api.OrderBody;
+import com.CHANGEME.infrastructure.rest.api.OrderPageBody;
+import com.CHANGEME.infrastructure.rest.api.OrdersApi;
+import com.CHANGEME.infrastructure.rest.api.PlaceOrderBody;
+import com.CHANGEME.orders.application.usecases.AddOrderLineService;
+import com.CHANGEME.orders.application.usecases.ConfirmOrderService;
+import com.CHANGEME.orders.application.usecases.GetOrderService;
+import com.CHANGEME.orders.application.usecases.ListCustomerOrdersService;
+import com.CHANGEME.orders.application.usecases.PayOrderService;
+import com.CHANGEME.orders.application.usecases.PlaceOrderService;
 import com.CHANGEME.orders.domain.OrderId;
-import com.CHANGEME.shared.infrastructure.web.api.AddOrderLineBody;
-import com.CHANGEME.shared.infrastructure.web.api.OrderBody;
-import com.CHANGEME.shared.infrastructure.web.api.OrderPageBody;
-import com.CHANGEME.shared.infrastructure.web.api.OrdersApi;
-import com.CHANGEME.shared.infrastructure.web.api.PlaceOrderBody;
+import com.CHANGEME.orders.infrastructure.rest.mapper.OrderApiConversion;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -101,45 +102,45 @@ class OrderController implements OrdersApi {
 
 ## Web conversion
 
-`src/main/java/com/CHANGEME/orders/infrastructure/web/OrderApiConversion.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/rest/mapper/OrderApiConversion.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.web;
+package com.CHANGEME.orders.infrastructure.rest.mapper;
 
-import com.CHANGEME.orders.application.AddOrderLineCommand;
-import com.CHANGEME.orders.application.ConfirmOrderCommand;
-import com.CHANGEME.orders.application.GetOrderQuery;
-import com.CHANGEME.orders.application.ListCustomerOrdersQuery;
-import com.CHANGEME.orders.application.OrderSummary;
-import com.CHANGEME.orders.application.PayOrderCommand;
-import com.CHANGEME.orders.application.PlaceOrderCommand;
+import com.CHANGEME.common.application.dto.results.PageResult;
+import com.CHANGEME.common.domain.Money;
+import com.CHANGEME.infrastructure.rest.api.AddOrderLineBody;
+import com.CHANGEME.infrastructure.rest.api.MoneyBody;
+import com.CHANGEME.infrastructure.rest.api.OrderBody;
+import com.CHANGEME.infrastructure.rest.api.OrderPageBody;
+import com.CHANGEME.infrastructure.rest.api.PageInfoBody;
+import com.CHANGEME.infrastructure.rest.api.PlaceOrderBody;
+import com.CHANGEME.orders.application.dto.commands.AddOrderLineCommand;
+import com.CHANGEME.orders.application.dto.commands.ConfirmOrderCommand;
+import com.CHANGEME.orders.application.dto.commands.PayOrderCommand;
+import com.CHANGEME.orders.application.dto.commands.PlaceOrderCommand;
+import com.CHANGEME.orders.application.dto.queries.GetOrderQuery;
+import com.CHANGEME.orders.application.dto.queries.ListCustomerOrdersQuery;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
 import com.CHANGEME.orders.domain.CustomerId;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.ProductId;
-import com.CHANGEME.shared.application.PageResult;
-import com.CHANGEME.shared.domain.Money;
-import com.CHANGEME.shared.infrastructure.web.api.AddOrderLineBody;
-import com.CHANGEME.shared.infrastructure.web.api.MoneyBody;
-import com.CHANGEME.shared.infrastructure.web.api.OrderBody;
-import com.CHANGEME.shared.infrastructure.web.api.OrderPageBody;
-import com.CHANGEME.shared.infrastructure.web.api.PageInfoBody;
-import com.CHANGEME.shared.infrastructure.web.api.PlaceOrderBody;
 import java.math.BigDecimal;
 import java.util.Currency;
 
 // Conversion between the generated models (*Body) and the application commands, queries and
-// results. One class per aggregate, final and package-private, next to the controller.
+// results. One class per aggregate, public and final, in rest.mapper next to rest.controller.
 // Invalid formats (BigDecimal, currency) throw IllegalArgumentException and become a 400.
-final class OrderApiConversion {
+public final class OrderApiConversion {
 
   private OrderApiConversion() {}
 
-  static PlaceOrderCommand toCommand(final PlaceOrderBody body) {
+  public static PlaceOrderCommand toCommand(final PlaceOrderBody body) {
     return new PlaceOrderCommand(
         new CustomerId(body.getCustomerId()), Currency.getInstance(body.getCurrency()));
   }
 
-  static AddOrderLineCommand toCommand(final long orderId, final AddOrderLineBody body) {
+  public static AddOrderLineCommand toCommand(final long orderId, final AddOrderLineBody body) {
     return new AddOrderLineCommand(
         new OrderId(orderId),
         new ProductId(body.getProductId()),
@@ -147,23 +148,24 @@ final class OrderApiConversion {
         body.getQuantity());
   }
 
-  static ConfirmOrderCommand toConfirmCommand(final long orderId) {
+  public static ConfirmOrderCommand toConfirmCommand(final long orderId) {
     return new ConfirmOrderCommand(new OrderId(orderId));
   }
 
-  static PayOrderCommand toPayCommand(final long orderId) {
+  public static PayOrderCommand toPayCommand(final long orderId) {
     return new PayOrderCommand(new OrderId(orderId));
   }
 
-  static GetOrderQuery toQuery(final long orderId) {
+  public static GetOrderQuery toQuery(final long orderId) {
     return new GetOrderQuery(new OrderId(orderId));
   }
 
-  static ListCustomerOrdersQuery toQuery(final long customerId, final int page, final int size) {
+  public static ListCustomerOrdersQuery toQuery(
+      final long customerId, final int page, final int size) {
     return new ListCustomerOrdersQuery(new CustomerId(customerId), page, size);
   }
 
-  static OrderBody toBody(final OrderSummary summary) {
+  public static OrderBody toBody(final OrderSummary summary) {
     return new OrderBody(
         summary.id().value(),
         summary.customerId().value(),
@@ -171,7 +173,7 @@ final class OrderApiConversion {
         toBody(summary.total()));
   }
 
-  static OrderPageBody toBody(final PageResult<OrderSummary> result) {
+  public static OrderPageBody toBody(final PageResult<OrderSummary> result) {
     return new OrderPageBody(
         result.items().stream().map(OrderApiConversion::toBody).toList(),
         new PageInfoBody(result.page(), result.size(), result.totalItems()));
@@ -415,11 +417,13 @@ CREATE TABLE order_lines (
 
 ## Aggregate mapper
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/OrderMapper.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/mapper/OrderMapper.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis.mapper;
 
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderLineRow;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderRow;
 import java.util.List;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
@@ -432,7 +436,7 @@ import org.apache.ibatis.annotations.Update;
 // MyBatisOrderRepository does the conversion to the domain. Rows are built by column name
 // (arg-name-based-constructor-auto-mapping in application.yml).
 @Mapper
-interface OrderMapper {
+public interface OrderMapper {
 
   @Select("SELECT nextval('orders_seq')")
   long nextId();
@@ -485,10 +489,10 @@ interface OrderMapper {
 
 ## Rows (`*Row`)
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/OrderRow.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/row/OrderRow.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis.row;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -496,7 +500,7 @@ import java.time.Instant;
 // Row of the orders table, as is. Database types (long, String, BigDecimal), never domain
 // types. total_amount is a copy of the total computed by the domain, so that read queries do not
 // repeat the discount rules in SQL.
-record OrderRow(
+public record OrderRow(
     long id,
     long customerId,
     String currency,
@@ -508,91 +512,52 @@ record OrderRow(
     long version) {}
 ```
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/OrderLineRow.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/row/OrderLineRow.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis.row;
 
 import java.math.BigDecimal;
 
-record OrderLineRow(
+public record OrderLineRow(
     long orderId, int position, long productId, BigDecimal unitPrice, int quantity) {}
 ```
 
-## Repository (version, collections, sealed types)
+## Persistence mapping (rows to domain and back)
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/MyBatisOrderRepository.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/mapping/OrderMapping.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis.mapping;
 
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.domain.CustomerId;
 import com.CHANGEME.orders.domain.Discount;
 import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.OrderLine;
-import com.CHANGEME.orders.domain.OrderRepository;
 import com.CHANGEME.orders.domain.OrderSnapshot;
 import com.CHANGEME.orders.domain.OrderStatus;
 import com.CHANGEME.orders.domain.ProductId;
-import com.CHANGEME.shared.domain.ConcurrentUpdateException;
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderLineRow;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderRow;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
-import java.util.Optional;
-import org.springframework.stereotype.Repository;
 
-// Repository implementation: all conversion between rows and domain lives here.
-// Saves by version (optimistic locking) and the lines are deleted and reinserted on every save().
-@Repository
-class MyBatisOrderRepository implements OrderRepository {
+// Persistence mapping: converts between rows and the domain, in both directions. Stateless, static
+// methods: database types on one side, domain types on the other. No TypeHandler for typed IDs.
+public final class OrderMapping {
 
-  private final OrderMapper mapper;
+  private OrderMapping() {}
 
-  MyBatisOrderRepository(final OrderMapper mapper) {
-    this.mapper = mapper;
+  public static OrderLineRow toLineRow(
+      final long orderId, final int position, final OrderLine line) {
+    return new OrderLineRow(
+        orderId, position, line.productId().value(), line.unitPrice().amount(), line.quantity());
   }
 
-  @Override
-  public OrderId nextId() {
-    return new OrderId(mapper.nextId());
-  }
-
-  @Override
-  public Optional<Order> findById(final OrderId id) {
-    return Optional.ofNullable(mapper.findById(id.value()))
-        .map(row -> Order.restore(toSnapshot(row, mapper.findLines(row.id()))));
-  }
-
-  @Override
-  public void save(final Order order) {
-    final OrderRow row = toRow(order);
-    if (order.version() == 0) {
-      mapper.insert(row);
-    } else if (mapper.update(row) == 0) {
-      throw new ConcurrentUpdateException("Order", order.id().value());
-    }
-    replaceLines(order);
-  }
-
-  private void replaceLines(final Order order) {
-    final long orderId = order.id().value();
-    mapper.deleteLines(orderId);
-    final List<OrderLine> lines = order.lines();
-    for (int position = 0; position < lines.size(); position++) {
-      final OrderLine line = lines.get(position);
-      mapper.insertLine(
-          new OrderLineRow(
-              orderId,
-              position,
-              line.productId().value(),
-              line.unitPrice().amount(),
-              line.quantity()));
-    }
-  }
-
-  private static OrderRow toRow(final Order order) {
+  public static OrderRow toRow(final Order order) {
     final OrderSnapshot snapshot = order.snapshot();
     final DiscountColumns discount = toColumns(snapshot.discount());
     return new OrderRow(
@@ -607,7 +572,7 @@ class MyBatisOrderRepository implements OrderRepository {
         snapshot.version());
   }
 
-  private static OrderSnapshot toSnapshot(final OrderRow row, final List<OrderLineRow> lines) {
+  public static OrderSnapshot toSnapshot(final OrderRow row, final List<OrderLineRow> lines) {
     final Currency currency = Currency.getInstance(row.currency());
     return new OrderSnapshot(
         new OrderId(row.id()),
@@ -651,13 +616,78 @@ class MyBatisOrderRepository implements OrderRepository {
 }
 ```
 
-## Read mapper
+## Repository (version, collections)
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/OrderSummaryMapper.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/MyBatisOrderRepository.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis;
 
+import com.CHANGEME.common.domain.exception.ConcurrentUpdateException;
+import com.CHANGEME.orders.domain.Order;
+import com.CHANGEME.orders.domain.OrderId;
+import com.CHANGEME.orders.domain.OrderLine;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.mapper.OrderMapper;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.mapping.OrderMapping;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderRow;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
+
+// Repository adapter: orchestrates the MyBatis mapper; conversion between rows and domain lives in
+// OrderMapping. Saves by version (optimistic locking) and the lines are deleted and reinserted on
+// every save().
+@Repository
+class MyBatisOrderRepository implements OrderRepository {
+
+  private final OrderMapper mapper;
+
+  MyBatisOrderRepository(final OrderMapper mapper) {
+    this.mapper = mapper;
+  }
+
+  @Override
+  public OrderId nextId() {
+    return new OrderId(mapper.nextId());
+  }
+
+  @Override
+  public Optional<Order> findById(final OrderId id) {
+    return Optional.ofNullable(mapper.findById(id.value()))
+        .map(row -> Order.restore(OrderMapping.toSnapshot(row, mapper.findLines(row.id()))));
+  }
+
+  @Override
+  public void save(final Order order) {
+    final OrderRow row = OrderMapping.toRow(order);
+    if (order.version() == 0) {
+      mapper.insert(row);
+    } else if (mapper.update(row) == 0) {
+      throw new ConcurrentUpdateException("Order", order.id().value());
+    }
+    replaceLines(order);
+  }
+
+  private void replaceLines(final Order order) {
+    final long orderId = order.id().value();
+    mapper.deleteLines(orderId);
+    final List<OrderLine> lines = order.lines();
+    for (int position = 0; position < lines.size(); position++) {
+      mapper.insertLine(OrderMapping.toLineRow(orderId, position, lines.get(position)));
+    }
+  }
+}
+```
+
+## Read mapper
+
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/mapper/OrderSummaryMapper.java`
+
+```java
+package com.CHANGEME.orders.infrastructure.persistence.mybatis.mapper;
+
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderSummaryRow;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -666,7 +696,7 @@ import org.apache.ibatis.annotations.Select;
 // Read mapper: flat queries for listings, without going through the aggregate.
 // Ordering always ends with the ID so that pagination is deterministic.
 @Mapper
-interface OrderSummaryMapper {
+public interface OrderSummaryMapper {
 
   @Select("""
       SELECT id, customer_id, status, total_amount, currency
@@ -683,31 +713,33 @@ interface OrderSummaryMapper {
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/OrderSummaryRow.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/row/OrderSummaryRow.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis.row;
 
 import java.math.BigDecimal;
 
-record OrderSummaryRow(
+public record OrderSummaryRow(
     long id, long customerId, String status, BigDecimal totalAmount, String currency) {}
 ```
 
 ## Read port implementation
 
-`src/main/java/com/CHANGEME/orders/infrastructure/persistence/MyBatisOrderSummaries.java`
+`src/main/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/MyBatisOrderSummaries.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis;
 
+import com.CHANGEME.common.application.dto.results.PageResult;
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.application.OrderSummaries;
-import com.CHANGEME.orders.application.OrderSummary;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
 import com.CHANGEME.orders.domain.CustomerId;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.OrderStatus;
-import com.CHANGEME.shared.application.PageResult;
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.mapper.OrderSummaryMapper;
+import com.CHANGEME.orders.infrastructure.persistence.mybatis.row.OrderSummaryRow;
 import java.util.Currency;
 import org.springframework.stereotype.Repository;
 
@@ -792,10 +824,10 @@ class PaymentConfig {}
 ```java
 package com.CHANGEME.orders.infrastructure.payment;
 
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.application.PaymentDeclinedException;
 import com.CHANGEME.orders.application.PaymentGateway;
 import com.CHANGEME.orders.domain.OrderId;
-import com.CHANGEME.shared.domain.Money;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -853,8 +885,8 @@ class HttpPaymentGateway implements PaymentGateway {
 ```java
 package com.CHANGEME.orders.infrastructure.payment;
 
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.domain.OrderId;
-import com.CHANGEME.shared.domain.Money;
 
 // Body expected by the external provider. It is an adapter detail: it does not leave this package.
 record ChargeRequest(String reference, String amount, String currency) {

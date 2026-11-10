@@ -4,7 +4,8 @@ An example `orders` context. Copy the shape (names, visibility, validation, `fin
 The `//` comments explain the pattern for you; they are not copied into project code, which only carries comments about the why.
 The code blocks are not compiled or run. The source of truth is the rules; if anything conflicts, the rules win.
 
-Rules: the `domain` section of `.github/copilot-instructions.md` and `.github/instructions/java-style.instructions.md`.
+Rules: `doc/ai/architecture.md` (domain layer packages), `doc/ai/code-conventions.md` (domain rules), `.github/instructions/domain.instructions.md` and `.github/instructions/java-coding.instructions.md`.
+Guards, policies and domain services are stateless final classes with a private constructor and static methods. The domain has no Spring, so use cases call them directly.
 
 ## Aggregate root
 
@@ -13,7 +14,11 @@ Rules: the `domain` section of `.github/copilot-instructions.md` and `.github/in
 ```java
 package com.CHANGEME.orders.domain;
 
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.common.domain.Money;
+import com.CHANGEME.orders.domain.exception.EmptyOrderException;
+import com.CHANGEME.orders.domain.exception.OrderNotConfirmedException;
+import com.CHANGEME.orders.domain.exception.OrderNotEditableException;
+import com.CHANGEME.orders.domain.guards.OrderSizeGuard;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Currency;
@@ -67,6 +72,7 @@ public final class Order {
 
   public void addLine(final ProductId productId, final Money unitPrice, final int quantity) {
     requireEditable();
+    OrderSizeGuard.ensureCanAddLine(id, lines.size());
     if (!unitPrice.currency().equals(currency)) {
       throw new IllegalArgumentException(
           "Order " + id.value() + " uses " + currency + ", not " + unitPrice.currency());
@@ -225,7 +231,7 @@ public record CustomerId(long value) {
 ```java
 package com.CHANGEME.orders.domain;
 
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.common.domain.Money;
 import java.util.Objects;
 
 // Element of an aggregate collection: a value object without its own ID. In the database its
@@ -246,10 +252,10 @@ public record OrderLine(ProductId productId, Money unitPrice, int quantity) {
 
 ## Shared value object
 
-`src/main/java/com/CHANGEME/shared/domain/Money.java`
+`src/main/java/com/CHANGEME/common/domain/Money.java`
 
 ```java
-package com.CHANGEME.shared.domain;
+package com.CHANGEME.common.domain;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -313,7 +319,7 @@ public record Money(BigDecimal amount, Currency currency) {
 ```java
 package com.CHANGEME.orders.domain;
 
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.common.domain.Money;
 import java.util.Objects;
 
 // Variants of a concept: a sealed interface with records. Each variant's own behaviour goes as
@@ -374,12 +380,13 @@ public enum OrderStatus {
 
 ## Business rule exceptions (409)
 
-`src/main/java/com/CHANGEME/orders/domain/OrderNotEditableException.java`
+`src/main/java/com/CHANGEME/orders/domain/exception/OrderNotEditableException.java`
 
 ```java
-package com.CHANGEME.orders.domain;
+package com.CHANGEME.orders.domain.exception;
 
-import com.CHANGEME.shared.domain.DomainException;
+import com.CHANGEME.common.domain.exception.DomainException;
+import com.CHANGEME.orders.domain.OrderId;
 
 // One exception per business rule, with the IDs in the message. It becomes a 409.
 public final class OrderNotEditableException extends DomainException {
@@ -390,12 +397,13 @@ public final class OrderNotEditableException extends DomainException {
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/domain/OrderNotConfirmedException.java`
+`src/main/java/com/CHANGEME/orders/domain/exception/OrderNotConfirmedException.java`
 
 ```java
-package com.CHANGEME.orders.domain;
+package com.CHANGEME.orders.domain.exception;
 
-import com.CHANGEME.shared.domain.DomainException;
+import com.CHANGEME.common.domain.exception.DomainException;
+import com.CHANGEME.orders.domain.OrderId;
 
 public final class OrderNotConfirmedException extends DomainException {
 
@@ -405,12 +413,13 @@ public final class OrderNotConfirmedException extends DomainException {
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/domain/EmptyOrderException.java`
+`src/main/java/com/CHANGEME/orders/domain/exception/EmptyOrderException.java`
 
 ```java
-package com.CHANGEME.orders.domain;
+package com.CHANGEME.orders.domain.exception;
 
-import com.CHANGEME.shared.domain.DomainException;
+import com.CHANGEME.common.domain.exception.DomainException;
+import com.CHANGEME.orders.domain.OrderId;
 
 public final class EmptyOrderException extends DomainException {
 
@@ -420,14 +429,33 @@ public final class EmptyOrderException extends DomainException {
 }
 ```
 
-## "Not found" exception (404)
-
-`src/main/java/com/CHANGEME/orders/domain/OrderNotFoundException.java`
+`src/main/java/com/CHANGEME/orders/domain/exception/OrderTooLargeException.java`
 
 ```java
-package com.CHANGEME.orders.domain;
+package com.CHANGEME.orders.domain.exception;
 
-import com.CHANGEME.shared.domain.NotFoundException;
+import com.CHANGEME.common.domain.exception.DomainException;
+import com.CHANGEME.orders.domain.OrderId;
+
+// A guard violation is a business rule failure like any other: its own exception, with the IDs in
+// the message.
+public final class OrderTooLargeException extends DomainException {
+
+  public OrderTooLargeException(final OrderId id, final int maxLines) {
+    super("Order " + id.value() + " cannot have more than " + maxLines + " lines");
+  }
+}
+```
+
+## "Not found" exception (404)
+
+`src/main/java/com/CHANGEME/orders/domain/exception/OrderNotFoundException.java`
+
+```java
+package com.CHANGEME.orders.domain.exception;
+
+import com.CHANGEME.common.domain.exception.NotFoundException;
+import com.CHANGEME.orders.domain.OrderId;
 
 // "Not found": extends NotFoundException and becomes a 404.
 public final class OrderNotFoundException extends NotFoundException {
@@ -440,11 +468,13 @@ public final class OrderNotFoundException extends NotFoundException {
 
 ## Repository interface
 
-`src/main/java/com/CHANGEME/orders/domain/OrderRepository.java`
+`src/main/java/com/CHANGEME/orders/domain/repository/OrderRepository.java`
 
 ```java
-package com.CHANGEME.orders.domain;
+package com.CHANGEME.orders.domain.repository;
 
+import com.CHANGEME.orders.domain.Order;
+import com.CHANGEME.orders.domain.OrderId;
 import java.util.Optional;
 
 // One repository per aggregate, as an interface in the domain. It only works with the whole
@@ -460,5 +490,82 @@ public interface OrderRepository {
   // the previous version: a use case saves only once and, if it has to keep working with the
   // aggregate, it loads it again.
   void save(Order order);
+}
+```
+
+## Guard
+
+`src/main/java/com/CHANGEME/orders/domain/guards/OrderSizeGuard.java`
+
+```java
+package com.CHANGEME.orders.domain.guards;
+
+import com.CHANGEME.orders.domain.OrderId;
+import com.CHANGEME.orders.domain.exception.OrderTooLargeException;
+
+// Guard: a precondition check that throws a domain exception. Stateless, named after the rule it
+// protects, and called by the aggregate before it changes state. Fictional example.
+public final class OrderSizeGuard {
+
+  private static final int MAX_LINES = 50;
+
+  private OrderSizeGuard() {}
+
+  public static void ensureCanAddLine(final OrderId id, final int currentLines) {
+    if (currentLines >= MAX_LINES) throw new OrderTooLargeException(id, MAX_LINES);
+  }
+}
+```
+
+## Policy
+
+`src/main/java/com/CHANGEME/orders/domain/policies/LoyaltyDiscountPolicy.java`
+
+```java
+package com.CHANGEME.orders.domain.policies;
+
+import com.CHANGEME.orders.domain.Discount;
+
+// Policy: a business decision that changes independently of the aggregate (here, which discount a
+// customer has earned). Stateless; the use case asks it and passes the result to the aggregate.
+// Fictional example.
+public final class LoyaltyDiscountPolicy {
+
+  private static final int ORDERS_PER_TIER = 5;
+  private static final int PERCENT_PER_TIER = 5;
+  private static final int MAX_PERCENT = 15;
+
+  private LoyaltyDiscountPolicy() {}
+
+  public static Discount discountFor(final int previousOrders) {
+    final int percent = Math.min(previousOrders / ORDERS_PER_TIER * PERCENT_PER_TIER, MAX_PERCENT);
+    if (percent == 0) return new Discount.NoDiscount();
+    return new Discount.PercentageDiscount(percent);
+  }
+}
+```
+
+## Domain service
+
+`src/main/java/com/CHANGEME/orders/domain/services/OrderMergeService.java`
+
+```java
+package com.CHANGEME.orders.domain.services;
+
+import com.CHANGEME.orders.domain.Order;
+import com.CHANGEME.orders.domain.OrderLine;
+
+// Domain service: business logic that involves more than one aggregate and belongs to neither.
+// Stateless, no Spring; the use case loads both aggregates, calls it and saves them.
+// Fictional example.
+public final class OrderMergeService {
+
+  private OrderMergeService() {}
+
+  public static void merge(final Order target, final Order source) {
+    for (final OrderLine line : source.lines()) {
+      target.addLine(line.productId(), line.unitPrice(), line.quantity());
+    }
+  }
 }
 ```

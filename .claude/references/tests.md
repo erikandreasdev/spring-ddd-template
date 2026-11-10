@@ -5,6 +5,7 @@ The `//` comments explain the pattern for you; they are not copied into project 
 The code blocks are not compiled or run. The source of truth is the rules; if anything conflicts, the rules win.
 
 Rules: `.claude/rules/testing.md`.
+Tests mirror the package of the class under test.
 `WireMockConfig` needs a dependency the template does not include: `org.wiremock:wiremock-standalone` (test). Include it in the plan when the first external service appears.
 
 ## Object Mother
@@ -14,7 +15,7 @@ Rules: `.claude/rules/testing.md`.
 ```java
 package com.CHANGEME.orders.domain;
 
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.common.domain.Money;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Currency;
@@ -93,7 +94,10 @@ import static com.CHANGEME.orders.domain.OrderMother.EUR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.common.domain.Money;
+import com.CHANGEME.orders.domain.exception.EmptyOrderException;
+import com.CHANGEME.orders.domain.exception.OrderNotConfirmedException;
+import com.CHANGEME.orders.domain.exception.OrderNotEditableException;
 import java.math.BigDecimal;
 import java.util.Currency;
 import org.instancio.junit.InstancioExtension;
@@ -207,10 +211,10 @@ class OrderTest {
 
 ## Value object test
 
-`src/test/java/com/CHANGEME/shared/domain/MoneyTest.java`
+`src/test/java/com/CHANGEME/common/domain/MoneyTest.java`
 
 ```java
-package com.CHANGEME.shared.domain;
+package com.CHANGEME.common.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -267,22 +271,23 @@ class MoneyTest {
 
 ## Use case test
 
-`src/test/java/com/CHANGEME/orders/application/ConfirmOrderServiceTest.java`
+`src/test/java/com/CHANGEME/orders/application/usecases/ConfirmOrderServiceTest.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.CHANGEME.IntegrationTest;
-import com.CHANGEME.orders.domain.EmptyOrderException;
+import com.CHANGEME.orders.application.dto.commands.ConfirmOrderCommand;
 import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.OrderMother;
-import com.CHANGEME.orders.domain.OrderNotFoundException;
-import com.CHANGEME.orders.domain.OrderRepository;
 import com.CHANGEME.orders.domain.OrderStatus;
+import com.CHANGEME.orders.domain.exception.EmptyOrderException;
+import com.CHANGEME.orders.domain.exception.OrderNotFoundException;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -335,10 +340,10 @@ class ConfirmOrderServiceTest {
 
 ## Use case test with an external service (WireMock)
 
-`src/test/java/com/CHANGEME/orders/application/PayOrderServiceTest.java`
+`src/test/java/com/CHANGEME/orders/application/usecases/PayOrderServiceTest.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -350,10 +355,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.CHANGEME.IntegrationTest;
+import com.CHANGEME.orders.application.PaymentDeclinedException;
+import com.CHANGEME.orders.application.dto.commands.PayOrderCommand;
 import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderMother;
-import com.CHANGEME.orders.domain.OrderRepository;
 import com.CHANGEME.orders.domain.OrderStatus;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -412,21 +419,23 @@ class PayOrderServiceTest {
 
 ## Read port test
 
-`src/test/java/com/CHANGEME/orders/application/ListCustomerOrdersServiceTest.java`
+`src/test/java/com/CHANGEME/orders/application/usecases/ListCustomerOrdersServiceTest.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
 import static com.CHANGEME.orders.domain.OrderMother.EUR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.CHANGEME.IntegrationTest;
+import com.CHANGEME.common.application.dto.results.PageResult;
+import com.CHANGEME.orders.application.dto.queries.ListCustomerOrdersQuery;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
 import com.CHANGEME.orders.domain.CustomerId;
 import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.OrderMother;
-import com.CHANGEME.orders.domain.OrderRepository;
-import com.CHANGEME.shared.application.PageResult;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -484,19 +493,19 @@ class ListCustomerOrdersServiceTest {
 
 ## Repository concurrency test
 
-`src/test/java/com/CHANGEME/orders/infrastructure/persistence/MyBatisOrderRepositoryTest.java`
+`src/test/java/com/CHANGEME/orders/infrastructure/persistence/mybatis/MyBatisOrderRepositoryTest.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.persistence;
+package com.CHANGEME.orders.infrastructure.persistence.mybatis;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.CHANGEME.IntegrationTest;
+import com.CHANGEME.common.domain.exception.ConcurrentUpdateException;
 import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderMother;
-import com.CHANGEME.orders.domain.OrderRepository;
 import com.CHANGEME.orders.domain.ProductId;
-import com.CHANGEME.shared.domain.ConcurrentUpdateException;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -527,10 +536,10 @@ class MyBatisOrderRepositoryTest {
 
 ## Controller test
 
-`src/test/java/com/CHANGEME/orders/infrastructure/web/OrderControllerTest.java`
+`src/test/java/com/CHANGEME/orders/infrastructure/rest/controller/OrderControllerTest.java`
 
 ```java
-package com.CHANGEME.orders.infrastructure.web;
+package com.CHANGEME.orders.infrastructure.rest.controller;
 
 import static com.CHANGEME.orders.domain.OrderMother.EUR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -538,19 +547,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 
-import com.CHANGEME.orders.application.AddOrderLineService;
-import com.CHANGEME.orders.application.ConfirmOrderService;
-import com.CHANGEME.orders.application.GetOrderService;
-import com.CHANGEME.orders.application.ListCustomerOrdersService;
-import com.CHANGEME.orders.application.OrderSummary;
-import com.CHANGEME.orders.application.PayOrderService;
-import com.CHANGEME.orders.application.PlaceOrderService;
+import com.CHANGEME.common.domain.Money;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
+import com.CHANGEME.orders.application.usecases.AddOrderLineService;
+import com.CHANGEME.orders.application.usecases.ConfirmOrderService;
+import com.CHANGEME.orders.application.usecases.GetOrderService;
+import com.CHANGEME.orders.application.usecases.ListCustomerOrdersService;
+import com.CHANGEME.orders.application.usecases.PayOrderService;
+import com.CHANGEME.orders.application.usecases.PlaceOrderService;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.OrderMother;
-import com.CHANGEME.orders.domain.OrderNotEditableException;
-import com.CHANGEME.orders.domain.OrderNotFoundException;
 import com.CHANGEME.orders.domain.OrderStatus;
-import com.CHANGEME.shared.domain.Money;
+import com.CHANGEME.orders.domain.exception.OrderNotEditableException;
+import com.CHANGEME.orders.domain.exception.OrderNotFoundException;
 import java.math.BigDecimal;
 import org.instancio.junit.InstancioExtension;
 import org.junit.jupiter.api.Test;

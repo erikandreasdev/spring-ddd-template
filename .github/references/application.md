@@ -4,15 +4,15 @@ An example `orders` context. Copy the shape (names, visibility, validation, `fin
 The `//` comments explain the pattern for you; they are not copied into project code, which only carries comments about the why.
 The code blocks are not compiled or run. The source of truth is the rules; if anything conflicts, the rules win.
 
-Rules: the `application` section of `.github/copilot-instructions.md` and `.github/instructions/java-style.instructions.md`.
-Commands and queries are validated in their compact constructor; use cases only orchestrate (load, call the aggregate, save) and return an ID or a result record, never the aggregate. There is no mapper class in `application`: converting an aggregate to a result record happens inside the use case (see `GetOrderService`); HTTP conversion lives in `infrastructure` (`*ApiConversion`).
+Rules: `doc/ai/architecture.md` (application layer packages), `doc/ai/code-conventions.md` (application rules), `.github/instructions/application.instructions.md` and `.github/instructions/java-coding.instructions.md`.
+Commands and queries are validated in their compact constructor; use cases only orchestrate (load, call the aggregate, save) and return an ID or a result record, never the aggregate. Converting an aggregate to a result record is done by an application mapper (`mapper` package: stateless, static methods, only domain and application types). Ports and the exceptions of their contract live directly in `application`.
 
 ## Command
 
-`src/main/java/com/CHANGEME/orders/application/PlaceOrderCommand.java`
+`src/main/java/com/CHANGEME/orders/application/dto/commands/PlaceOrderCommand.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.commands;
 
 import com.CHANGEME.orders.domain.CustomerId;
 import java.util.Currency;
@@ -29,14 +29,14 @@ public record PlaceOrderCommand(CustomerId customerId, Currency currency) {
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/application/AddOrderLineCommand.java`
+`src/main/java/com/CHANGEME/orders/application/dto/commands/AddOrderLineCommand.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.commands;
 
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.ProductId;
-import com.CHANGEME.shared.domain.Money;
 import java.util.Objects;
 
 public record AddOrderLineCommand(
@@ -50,10 +50,10 @@ public record AddOrderLineCommand(
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/application/ConfirmOrderCommand.java`
+`src/main/java/com/CHANGEME/orders/application/dto/commands/ConfirmOrderCommand.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.commands;
 
 import com.CHANGEME.orders.domain.OrderId;
 import java.util.Objects;
@@ -66,10 +66,10 @@ public record ConfirmOrderCommand(OrderId orderId) {
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/application/PayOrderCommand.java`
+`src/main/java/com/CHANGEME/orders/application/dto/commands/PayOrderCommand.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.commands;
 
 import com.CHANGEME.orders.domain.OrderId;
 import java.util.Objects;
@@ -84,15 +84,16 @@ public record PayOrderCommand(OrderId orderId) {
 
 ## Creation use case (sequence ID, `Clock`)
 
-`src/main/java/com/CHANGEME/orders/application/PlaceOrderService.java`
+`src/main/java/com/CHANGEME/orders/application/usecases/PlaceOrderService.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.orders.application.dto.commands.PlaceOrderCommand;
 import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderId;
-import com.CHANGEME.orders.domain.OrderRepository;
-import com.CHANGEME.shared.application.UseCase;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 import java.time.Clock;
 
 // Creation use case: requests the ID from the sequence, creates with the business factory and
@@ -119,15 +120,16 @@ public class PlaceOrderService {
 
 ## Modification use case
 
-`src/main/java/com/CHANGEME/orders/application/AddOrderLineService.java`
+`src/main/java/com/CHANGEME/orders/application/usecases/AddOrderLineService.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.orders.application.dto.commands.AddOrderLineCommand;
 import com.CHANGEME.orders.domain.Order;
-import com.CHANGEME.orders.domain.OrderNotFoundException;
-import com.CHANGEME.orders.domain.OrderRepository;
-import com.CHANGEME.shared.application.UseCase;
+import com.CHANGEME.orders.domain.exception.OrderNotFoundException;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 
 // Modification use case: load, call the business method, save. Validation of the quantity
 // and the currency lives in the domain, not here.
@@ -151,15 +153,16 @@ public class AddOrderLineService {
 }
 ```
 
-`src/main/java/com/CHANGEME/orders/application/ConfirmOrderService.java`
+`src/main/java/com/CHANGEME/orders/application/usecases/ConfirmOrderService.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.orders.application.dto.commands.ConfirmOrderCommand;
 import com.CHANGEME.orders.domain.Order;
-import com.CHANGEME.orders.domain.OrderNotFoundException;
-import com.CHANGEME.orders.domain.OrderRepository;
-import com.CHANGEME.shared.application.UseCase;
+import com.CHANGEME.orders.domain.exception.OrderNotFoundException;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 
 @UseCase
 public class ConfirmOrderService {
@@ -183,15 +186,17 @@ public class ConfirmOrderService {
 
 ## Use case with an external service (ordering and rollback)
 
-`src/main/java/com/CHANGEME/orders/application/PayOrderService.java`
+`src/main/java/com/CHANGEME/orders/application/usecases/PayOrderService.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.orders.application.PaymentGateway;
+import com.CHANGEME.orders.application.dto.commands.PayOrderCommand;
 import com.CHANGEME.orders.domain.Order;
-import com.CHANGEME.orders.domain.OrderNotFoundException;
-import com.CHANGEME.orders.domain.OrderRepository;
-import com.CHANGEME.shared.application.UseCase;
+import com.CHANGEME.orders.domain.exception.OrderNotFoundException;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 
 // Use case with an external port. The charge goes last: if it fails, the exception rolls back the
 // transaction and the order is not left as paid. Validating first in the domain (markPaid) avoids
@@ -221,10 +226,10 @@ public class PayOrderService {
 
 ## Query
 
-`src/main/java/com/CHANGEME/orders/application/GetOrderQuery.java`
+`src/main/java/com/CHANGEME/orders/application/dto/queries/GetOrderQuery.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.queries;
 
 import com.CHANGEME.orders.domain.OrderId;
 import java.util.Objects;
@@ -238,18 +243,17 @@ public record GetOrderQuery(OrderId orderId) {
 }
 ```
 
-## Result record (and conversion from the aggregate)
+## Result record
 
-`src/main/java/com/CHANGEME/orders/application/OrderSummary.java`
+`src/main/java/com/CHANGEME/orders/application/dto/results/OrderSummary.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.results;
 
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.domain.CustomerId;
-import com.CHANGEME.orders.domain.Order;
 import com.CHANGEME.orders.domain.OrderId;
 import com.CHANGEME.orders.domain.OrderStatus;
-import com.CHANGEME.shared.domain.Money;
 import java.util.Objects;
 
 // Result record of a query. The use case never returns the aggregate.
@@ -261,8 +265,26 @@ public record OrderSummary(OrderId id, CustomerId customerId, OrderStatus status
     Objects.requireNonNull(status);
     Objects.requireNonNull(total);
   }
+}
+```
 
-  static OrderSummary of(final Order order) {
+## Application mapper (aggregate to result record)
+
+`src/main/java/com/CHANGEME/orders/application/mapper/OrderResultMapper.java`
+
+```java
+package com.CHANGEME.orders.application.mapper;
+
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
+import com.CHANGEME.orders.domain.Order;
+
+// Application mapper: converts an aggregate into a result record, so the use case never returns the
+// aggregate. Stateless, static methods, only domain and application types.
+public final class OrderResultMapper {
+
+  private OrderResultMapper() {}
+
+  public static OrderSummary toSummary(final Order order) {
     return new OrderSummary(order.id(), order.customerId(), order.status(), order.total());
   }
 }
@@ -270,16 +292,19 @@ public record OrderSummary(OrderId id, CustomerId customerId, OrderStatus status
 
 ## Read-by-ID use case
 
-`src/main/java/com/CHANGEME/orders/application/GetOrderService.java`
+`src/main/java/com/CHANGEME/orders/application/usecases/GetOrderService.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
-import com.CHANGEME.orders.domain.OrderNotFoundException;
-import com.CHANGEME.orders.domain.OrderRepository;
-import com.CHANGEME.shared.application.UseCase;
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.orders.application.dto.queries.GetOrderQuery;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
+import com.CHANGEME.orders.application.mapper.OrderResultMapper;
+import com.CHANGEME.orders.domain.exception.OrderNotFoundException;
+import com.CHANGEME.orders.domain.repository.OrderRepository;
 
-// Reading an aggregate by its ID: repository plus conversion to the result record.
+// Reading an aggregate by its ID: repository plus the application mapper to the result record.
 @UseCase
 public class GetOrderService {
 
@@ -292,7 +317,7 @@ public class GetOrderService {
   public OrderSummary get(final GetOrderQuery query) {
     return orders
         .findById(query.orderId())
-        .map(OrderSummary::of)
+        .map(OrderResultMapper::toSummary)
         .orElseThrow(() -> new OrderNotFoundException(query.orderId()));
   }
 }
@@ -300,10 +325,10 @@ public class GetOrderService {
 
 ## Paginated query
 
-`src/main/java/com/CHANGEME/orders/application/ListCustomerOrdersQuery.java`
+`src/main/java/com/CHANGEME/orders/application/dto/queries/ListCustomerOrdersQuery.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.dto.queries;
 
 import com.CHANGEME.orders.domain.CustomerId;
 import java.util.Objects;
@@ -322,13 +347,16 @@ public record ListCustomerOrdersQuery(CustomerId customerId, int page, int size)
 
 ## Listing use case
 
-`src/main/java/com/CHANGEME/orders/application/ListCustomerOrdersService.java`
+`src/main/java/com/CHANGEME/orders/application/usecases/ListCustomerOrdersService.java`
 
 ```java
-package com.CHANGEME.orders.application;
+package com.CHANGEME.orders.application.usecases;
 
-import com.CHANGEME.shared.application.PageResult;
-import com.CHANGEME.shared.application.UseCase;
+import com.CHANGEME.common.application.UseCase;
+import com.CHANGEME.common.application.dto.results.PageResult;
+import com.CHANGEME.orders.application.OrderSummaries;
+import com.CHANGEME.orders.application.dto.queries.ListCustomerOrdersQuery;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
 
 @UseCase
 public class ListCustomerOrdersService {
@@ -352,8 +380,9 @@ public class ListCustomerOrdersService {
 ```java
 package com.CHANGEME.orders.application;
 
+import com.CHANGEME.common.application.dto.results.PageResult;
+import com.CHANGEME.orders.application.dto.results.OrderSummary;
 import com.CHANGEME.orders.domain.CustomerId;
-import com.CHANGEME.shared.application.PageResult;
 
 // Read port for listings: returns result records directly from SQL, without loading
 // aggregates. It lives in application because it is not a domain concept.
@@ -365,15 +394,15 @@ public interface OrderSummaries {
 
 ## Paginated result
 
-`src/main/java/com/CHANGEME/shared/application/PageResult.java`
+`src/main/java/com/CHANGEME/common/application/dto/results/PageResult.java`
 
 ```java
-package com.CHANGEME.shared.application;
+package com.CHANGEME.common.application.dto.results;
 
 import java.util.List;
 import java.util.Objects;
 
-// Paginated result of a read port. Create it in shared.application with the first listing.
+// Paginated result of a read port. Create it in common.application.dto.results with the first listing.
 public record PageResult<T>(List<T> items, int page, int size, long totalItems) {
 
   public PageResult {
@@ -392,8 +421,8 @@ public record PageResult<T>(List<T> items, int page, int size, long totalItems) 
 ```java
 package com.CHANGEME.orders.application;
 
+import com.CHANGEME.common.domain.Money;
 import com.CHANGEME.orders.domain.OrderId;
-import com.CHANGEME.shared.domain.Money;
 
 // Output port to an external service: an interface in application, named after its purpose,
 // with domain types. The implementation (HttpPaymentGateway) lives in infrastructure.
@@ -411,8 +440,8 @@ public interface PaymentGateway {
 ```java
 package com.CHANGEME.orders.application;
 
+import com.CHANGEME.common.domain.exception.DomainException;
 import com.CHANGEME.orders.domain.OrderId;
-import com.CHANGEME.shared.domain.DomainException;
 
 // Part of the PaymentGateway port's contract, which is why it lives next to it. It extends
 // DomainException so it becomes a 409 and triggers a rollback.

@@ -4,7 +4,7 @@ An example `orders` context. Copy the shape (names, visibility, validation, `fin
 The `//` comments explain the pattern for you; they are not copied into project code, which only carries comments about the why.
 The code blocks are not compiled or run. The source of truth is the rules; if anything conflicts, the rules win.
 
-Before creating a class, open the file for its layer and copy the shape of the section for its kind.
+Before creating a class, read `doc/ai/architecture.md` to know which package it goes in, then open the file for its layer here and copy the shape of the section for its kind.
 
 - The SQL is PostgreSQL; the marker for adapting it to your database is in `infrastructure.md`.
 - Some pieces need a dependency the template does not include: `spring-boot-starter-restclient` for the HTTP adapter and `org.wiremock:wiremock-standalone` (test) for `WireMockConfig`. Include them in the plan when the first external service appears.
@@ -13,9 +13,9 @@ Before creating a class, open the file for its layer and copy the shape of the s
 |---|---|
 | Domain | `domain.md` |
 | Application | `application.md` |
-| Infrastructure (web, persistence, external adapters, API, migrations) | `infrastructure.md` |
+| Infrastructure (rest, persistence, external adapters, API, migrations) | `infrastructure.md` |
 | Tests | `tests.md` |
-| Diagrams | `docs.md` |
+| Diagrams | `diagrams.md` |
 
 ## Sections by kind
 
@@ -32,12 +32,16 @@ Before creating a class, open the file for its layer and copy the shape of the s
 | Business rule exceptions (409) | `domain.md` |
 | "Not found" exception (404) | `domain.md` |
 | Repository interface | `domain.md` |
+| Guard | `domain.md` |
+| Policy | `domain.md` |
+| Domain service | `domain.md` |
 | Command | `application.md` |
 | Creation use case (sequence ID, `Clock`) | `application.md` |
 | Modification use case | `application.md` |
 | Use case with an external service (ordering and rollback) | `application.md` |
 | Query | `application.md` |
-| Result record (and conversion from the aggregate) | `application.md` |
+| Result record | `application.md` |
+| Application mapper (aggregate to result record) | `application.md` |
 | Read-by-ID use case | `application.md` |
 | Paginated query | `application.md` |
 | Listing use case | `application.md` |
@@ -51,7 +55,8 @@ Before creating a class, open the file for its layer and copy the shape of the s
 | Flyway migration | `infrastructure.md` |
 | Aggregate mapper | `infrastructure.md` |
 | Rows (`*Row`) | `infrastructure.md` |
-| Repository (version, collections, sealed types) | `infrastructure.md` |
+| Persistence mapping (rows to domain and back) | `infrastructure.md` |
+| Repository (version, collections) | `infrastructure.md` |
 | Read mapper | `infrastructure.md` |
 | Read port implementation | `infrastructure.md` |
 | Adapter properties | `infrastructure.md` |
@@ -68,5 +73,5 @@ Before creating a class, open the file for its layer and copy the shape of the s
 | Controller test | `tests.md` |
 | Full flow test | `tests.md` |
 | Shared WireMock server | `tests.md` |
-| Context diagram | `docs.md` |
-| Context map | `docs.md` |
+| Context diagram | `diagrams.md` |
+| Context map | `diagrams.md` |

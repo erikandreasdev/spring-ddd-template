@@ -113,8 +113,8 @@
             <configuration>
               <inputSpec>${project.basedir}/src/main/resources/openapi/api.yaml</inputSpec>
               <generatorName>spring</generatorName>
-              <apiPackage>com.CHANGEME.shared.infrastructure.web.api</apiPackage>
-              <modelPackage>com.CHANGEME.shared.infrastructure.web.api</modelPackage>
+              <apiPackage>com.CHANGEME.infrastructure.rest.api</apiPackage>
+              <modelPackage>com.CHANGEME.infrastructure.rest.api</modelPackage>
               <modelNameSuffix>Body</modelNameSuffix>
               <generateSupportingFiles>false</generateSupportingFiles>
               <generateApiTests>false</generateApiTests>
@@ -144,7 +144,7 @@
         <configuration>
           <excludes>
             <!-- Code generated from api.yaml -->
-            <exclude>**/shared/infrastructure/web/api/**</exclude>
+            <exclude>**/infrastructure/rest/api/**</exclude>
           </excludes>
         </configuration>
         <executions>

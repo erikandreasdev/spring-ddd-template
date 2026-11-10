@@ -18,18 +18,17 @@ marker:
 grep -rn "CHANGEME:" --exclude=README.md .
 ```
 
-There are twelve spots, all but two about the database (the format command). The template works
-with PostgreSQL without changes; if that is your database, just delete the comments.
+There are ten spots, all but one about the database (the format command). The template works with
+PostgreSQL without changes; if that is your database, just delete the comments.
 
 | File | What to decide |
 |---|---|
 | `pom.xml` (two comments) | JDBC driver, Flyway module and Testcontainers module for your database |
 | `src/main/resources/application.yml` | JDBC URL prefix |
 | `src/test/java/com/CHANGEME/TestcontainersConfig.java` | Container class and image |
-| `CLAUDE.md` (two comments) | Database name and format command |
+| `doc/ai/tech-stack.md` (two comments) | Database name and format command (shared by Claude Code and Copilot) |
 | `.claude/rules/persistence.md` | Sequence syntax |
 | `.claude/references/infrastructure.md` | SQL syntax of the references |
-| `.github/copilot-instructions.md` (two comments) | Same two decisions for GitHub Copilot |
 | `.github/instructions/persistence.instructions.md` | Sequence syntax |
 | `.github/references/infrastructure.md` | SQL syntax of the references |
 
@@ -68,7 +67,7 @@ CLAUDE.md
 .claude/
 ```
 
-`docs/` is part of the project.
+`doc/ai/` and `docs/` are part of the project: both tools read the shared instructions in `doc/ai/`.
 
 The GitHub Copilot configuration (`.github/`) is the opposite: the cloud agent reads it from the
 repository, so commit it. If you only use Claude Code, delete `.github/copilot-instructions.md`,
@@ -92,33 +91,47 @@ project folder. It starts in plan mode: it edits nothing until you approve the p
 
 ## What is included
 
+### Shared AI documentation (`doc/ai/`)
+
+Single source for both tools; `CLAUDE.md` and `.github/copilot-instructions.md` only index it.
+
+| File | Purpose |
+|---|---|
+| `doc/ai/tech-stack.md` | Stack, database, formatting, base package |
+| `doc/ai/project-map.md` | Where things are; updated when a package, context or module changes |
+| `doc/ai/architecture.md` | Package layout per layer, dependency rule and how the structure is kept |
+| `doc/ai/code-conventions.md` | Coding rules per layer (domain, application, infrastructure) |
+
 ### Claude Code
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | Architecture and way of working; loaded in every session |
-| `.claude/rules/java-style.md` | Java style; loaded when reading `.java` files |
-| `.claude/rules/spring-style.md` | Configuration, logging and observability; when reading infrastructure or resources |
-| `.claude/rules/api.md` | API design and controllers; when reading `api.yaml` or the web layer |
+| `CLAUDE.md` | Index of the files above and of the rules below; loaded in every session |
+| `.claude/rules/way-of-working.md` | Plan first, no commits, verification; loaded in every session |
+| `.claude/rules/domain.md`, `application.md`, `infrastructure.md` | Short layer checklists; when reading files of that layer |
+| `.claude/rules/java-coding.md` | Java style; loaded when reading `.java` files |
+| `.claude/rules/spring.md` | Configuration, logging and observability; when reading infrastructure or resources |
+| `.claude/rules/api.md` | API design and controllers; when reading `api.yaml` or the rest layer |
 | `.claude/rules/persistence.md` | Repositories, SQL and migrations; when reading persistence or `db/` |
 | `.claude/rules/testing.md` | Test strategy and style; when reading `src/test` |
-| `.claude/rules/docs.md` | Diagrams; when reading `docs/` |
+| `.claude/rules/diagram.md` | Diagrams; when reading `docs/` |
 | `.claude/skills/add-feature/` | Procedure for adding a feature |
 | `.claude/references/` | One example of each kind of class (`orders` context) as a Markdown file per layer, indexed in `INDEX.md`. Not compiled |
 | `.claude/settings.local.json` | Plan mode by default and permissions |
 
 Configured permissions: `mvn` and read-only `git` commands without asking; asks before editing
-`CLAUDE.md`, `.claude/`, `ArchitectureTest` and `pom.xml`.
+`CLAUDE.md`, `.claude/`, `doc/ai/`, `ArchitectureTest` and `pom.xml`.
 
 ### GitHub Copilot
 
-The same configuration for Copilot (cloud agent, agent mode and code review). It is a copy of the
-Claude Code one with the paths changed; keep both in sync when you edit either.
+The same configuration for Copilot (cloud agent, agent mode and code review). The instructions,
+skill and references are a copy of the Claude Code ones with the paths changed; keep both in sync
+when you edit either (the shared `doc/ai/` is not duplicated).
 
 | File | Purpose |
 |---|---|
-| `.github/copilot-instructions.md` | Architecture and way of working (counterpart of `CLAUDE.md`); applies to every request |
-| `.github/instructions/*.instructions.md` | One per rule in `.claude/rules/`; the `applyTo` frontmatter selects the files it applies to |
+| `.github/copilot-instructions.md` | Index (counterpart of `CLAUDE.md`); applies to every request |
+| `.github/instructions/*.instructions.md` | One per rule in `.claude/rules/`; the `applyTo` frontmatter selects the files it applies to (`way-of-working` applies to all) |
 | `.github/skills/add-feature/` | Procedure for adding a feature |
 | `.github/references/` | Same Markdown references as `.claude/references/` |
 | `.github/workflows/copilot-setup-steps.yml` | Java 21, Maven and dependencies for the cloud agent |
@@ -132,13 +145,13 @@ so it may load overlapping instructions; delete the ones you do not use.
 | File | Purpose |
 |---|---|
 | `src/main/resources/openapi/api.yaml` | API specification; generates interfaces and models at build time |
-| `shared/application/UseCase.java` | Own annotation, without Spring, to mark use cases |
-| `shared/infrastructure/UseCaseConfig.java` | Registers `@UseCase` classes as transactional beans |
-| `shared/infrastructure/ClockConfig.java` | UTC `Clock` bean |
-| `shared/domain/*Exception.java` | Base domain exceptions and version conflict |
-| `shared/infrastructure/web/ApiExceptionHandler.java` | Translates exceptions to `ProblemDetail` with `traceId` |
-| `shared/infrastructure/web/RequestLoggingFilter.java` | One log line per request |
-| `ArchitectureTest.java` | ArchUnit rules |
+| `common/application/UseCase.java` | Own annotation, without Spring, to mark use cases |
+| `infrastructure/config/UseCaseConfig.java` | Registers `@UseCase` classes as transactional beans |
+| `infrastructure/config/ClockConfig.java` | UTC `Clock` bean |
+| `common/domain/exception/*Exception.java` | Base domain exceptions and version conflict |
+| `infrastructure/rest/exception/ApiExceptionHandler.java` | Translates exceptions to `ProblemDetail` with `traceId` |
+| `infrastructure/rest/filter/RequestLoggingFilter.java` | One log line per request |
+| `ArchitectureTest.java` | ArchUnit rules: dependencies, names and packages (`doc/ai/architecture.md`) |
 | `ApiExceptionHandlerTest.java` | Error handling tests |
 | `IntegrationTest.java`, `TestcontainersConfig.java` | Integration tests against a real database |
 | `TestApplication.java` | Local run with Testcontainers |
